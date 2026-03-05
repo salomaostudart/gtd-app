@@ -1,7 +1,7 @@
 # Checkpoint
 
-## Estado atual (05/03/2026 ~13:45)
-App GTD deployed em https://metodogtd.pages.dev/ com CSP headers + 2FA opcional + reset de senha + SMTP Resend configurado (mas ainda nao funcional — falta DNS).
+## Estado atual (05/03/2026 ~17:15)
+App GTD deployed em https://metodogtd.pages.dev/ com 10 features novas + 14 bug fixes + importacao + iOS fixes. DNS sal.dev.br em transicao (Registro.br → Cloudflare). Resend DKIM/SPF/MX/DMARC adicionados no Cloudflare, verificacao pendente.
 
 ## Onde paramos
 - SMTP customizado configurado: Resend (smtp.resend.com:465, sender: noreply@resend.dev, nome: GTD App)
@@ -63,7 +63,8 @@ Depois: atualizar sender email no Supabase SMTP para noreply@sal.dev.br
 10. Atalhos de teclado extras — "?" para lista de atalhos, gestos touch
 
 ## Proximo passo
-- Corrigir 14 bugs UX + iOS/Mac (lista em tarefas.md)
-- Deploy das melhorias + correcoes PT-BR + importacao
+- Aguardar DNS propagar (~1h30) → sal.dev.br ativo + Resend verificado
+- Atualizar sender email no Supabase SMTP para noreply@sal.dev.br
+- Atualizar URL do site no Supabase para https://sal.dev.br
+- Testar: reset de senha, 2FA, envio de email via Resend
 - Migracao banco JSONB → rows individuais (futuro — habilita Realtime + CLI)
-- Aguardar transicao DNS do Registro.br, adicionar registros, verificar dominio no Resend
