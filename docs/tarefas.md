@@ -26,6 +26,8 @@
 - [x] Fix: 2FA login (loginInProgress flag)
 - [x] Botao mostrar/esconder senha
 - [x] Templates email Supabase traduzidos para PT-BR
+- [x] Teste 2FA completo: login + OTP 8 digitos + verificacao OK
+- [x] Fix: campo OTP maxlength 6 → 8 (Supabase envia 8 digitos)
 
 ## Email
 - [x] SMTP customizado via Resend configurado no Supabase (smtp.resend.com:465)
