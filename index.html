@@ -1445,7 +1445,7 @@ select { cursor: pointer; }
       </p>
       <div class="form-group">
         <label>Código de Verificação</label>
-        <input type="text" id="auth-2fa-code" placeholder="000000" maxlength="6" style="font-family:monospace;letter-spacing:4px;text-align:center;font-size:20px" onkeydown="if(event.key==='Enter')verify2FA()">
+        <input type="text" id="auth-2fa-code" placeholder="00000000" maxlength="8" style="font-family:monospace;letter-spacing:4px;text-align:center;font-size:20px" onkeydown="if(event.key==='Enter')verify2FA()">
       </div>
       <button class="btn btn-primary" style="width:100%;padding:10px;font-size:14px" onclick="verify2FA()" id="auth-2fa-btn">Verificar</button>
       <p class="auth-toggle"><a href="#" onclick="cancel2FA();return false" tabindex="0">Cancelar</a></p>
@@ -4461,7 +4461,7 @@ function togglePasswordVisibility(btn) {
 async function verify2FA() {
   if (!pending2FAEmail) return;
   const code = document.getElementById('auth-2fa-code').value.trim();
-  if (!code || code.length !== 6) { showAuthMessage('Digite o código de 6 dígitos.', 'error'); return; }
+  if (!code || code.length < 6 || code.length > 8) { showAuthMessage('Digite o código de verificação.', 'error'); return; }
 
   const btn = document.getElementById('auth-2fa-btn');
   btn.textContent = 'Verificando...';

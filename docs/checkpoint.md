@@ -23,8 +23,12 @@ App GTD deployed em https://sal.dev.br (+ https://metodogtd.pages.dev). DNS prop
 - Senha: teste123
 - 2FA: ativado
 
+## O que foi feito (sessao 05/03/2026 noite 3)
+- Commit + push GitHub (auth fixes + password toggle)
+- Teste 2FA completo: login → OTP enviado → codigo inserido → login OK
+- Fix: campo OTP maxlength 6 → 8 (Supabase envia 8 digitos)
+- Fix: validacao JS code.length !== 6 → aceita 6 a 8 digitos
+- Deploy com correcoes OTP
+
 ## Proximo passo
-1. Testar 2FA completo: inserir codigo OTP e confirmar login
-2. Commit + push GitHub
-3. Futuro:
-   - Migracao banco JSONB → rows individuais (habilita Realtime + CLI)
+1. Futuro: Migracao banco JSONB → rows individuais (habilita Realtime + CLI)
