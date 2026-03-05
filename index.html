@@ -2153,7 +2153,7 @@ function renderProcess() {
       </div>`;
   }
   else if (processStep === 'defer-form') {
-    const ctxOptions = data.contexts.map(c => `<option value="${c}">${c}</option>`).join('');
+    const ctxOptions = data.contexts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
     const prjOptions = '<option value="">(nenhum)</option>' + data.projects.filter(p=>!p.done).map(p => `<option value="${p.id}"${p.id===processProjectId?' selected':''}>${esc(p.name)}</option>`).join('');
     wizard.innerHTML = header + `
       <div class="wizard-step">
@@ -2436,7 +2436,7 @@ function renderActions() {
   const ctxSelect = document.getElementById('filter-context');
   const currentVal = ctxSelect.value;
   const usedContexts = [...new Set(data.actions.filter(a => !a.done).map(a => a.context))];
-  ctxSelect.innerHTML = '<option value="">Todos</option>' + usedContexts.map(c => `<option value="${c}" ${c===currentVal?'selected':''}>${c}</option>`).join('');
+  ctxSelect.innerHTML = '<option value="">Todos</option>' + usedContexts.map(c => `<option value="${esc(c)}" ${c===currentVal?'selected':''}>${esc(c)}</option>`).join('');
 
   let actions = data.actions.filter(a => !a.done);
   if (fCtx) actions = actions.filter(a => a.context === fCtx);
@@ -2518,7 +2518,7 @@ function deleteAction(id) {
 
 function showAddActionModal() {
   const text = document.getElementById('action-input').value;
-  const ctxOptions = data.contexts.map(c => `<option value="${c}">${c}</option>`).join('');
+  const ctxOptions = data.contexts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
   const prjOptions = '<option value="">(nenhum)</option>' + data.projects.filter(p=>!p.done).map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
   openModal(`
     <h3>Nova Próxima Ação</h3>
@@ -2557,7 +2557,7 @@ function saveNewAction() {
 function editAction(id) {
   const a = data.actions.find(x => x.id === id);
   if (!a) return;
-  const ctxOptions = data.contexts.map(c => `<option value="${c}" ${c===a.context?'selected':''}>${c}</option>`).join('');
+  const ctxOptions = data.contexts.map(c => `<option value="${esc(c)}" ${c===a.context?'selected':''}>${esc(c)}</option>`).join('');
   const prjOptions = '<option value="">(nenhum)</option>' + data.projects.filter(p=>!p.done).map(p => `<option value="${p.id}" ${p.id===a.projectId?'selected':''}>${esc(p.name)}</option>`).join('');
   openModal(`
     <h3>Editar Ação</h3>
@@ -2700,7 +2700,7 @@ function reactivateProject(id) {
 }
 
 function addActionToProject(projectId) {
-  const ctxOptions = data.contexts.map(c => `<option value="${c}">${c}</option>`).join('');
+  const ctxOptions = data.contexts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
   openModal(`
     <h3>Nova Ação para o Projeto</h3>
     <div class="form-group"><label>Próxima ação (física e visível):</label><input type="text" id="modal-pa-text" placeholder="Ex: Pesquisar precos no site..."></div>

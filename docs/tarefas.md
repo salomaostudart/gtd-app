@@ -6,7 +6,7 @@
 - [x] Tabela `user_data` criada com RLS
 - [x] Autenticacao configurada (email habilitado)
 - [x] Deploy no Cloudflare Pages (3 arquivos: index.html, manifest.json, sw.js)
-- [~] Dominio personalizado sal.dev.br (adicionado no Cloudflare Pages, aguardando DNS)
+- [x] Dominio personalizado sal.dev.br (DNS propagado, SSL ativo)
 - [x] URL do site atualizada no Supabase (Authentication > URL Configuration)
 - [x] Teste: criar conta, login, sync verificado no banco
 
@@ -28,8 +28,8 @@
 - [x] Rate limit aumentado para 30 emails/hora
 - [x] Dominio sal.dev.br adicionado no Resend (sa-east-1)
 - [x] Adicionar 4 registros DNS no Cloudflare (DKIM + MX + SPF + DMARC)
-- [ ] Verificar dominio no Resend
-- [ ] Atualizar sender email no Supabase para noreply@sal.dev.br
+- [x] Verificar dominio no Resend (verificado 05/03/2026 19:05)
+- [x] Atualizar sender email no Supabase para noreply@sal.dev.br
 - [ ] Testar envio de email via Resend (criar conta ou reset de senha)
 
 ## Melhorias (05/03/2026)
@@ -63,8 +63,8 @@
 
 ## Correcoes de texto PT-BR
 - [x] Acentuacao corrigida (14 fixes via script Python)
-- [ ] "Nao tem conta?" na tela de login (falta acento)
-- [ ] Revisao geral de pontuacao e frases
+- [x] "Não tem conta?" na tela de login (ja estava corrigido)
+- [x] Revisao geral de pontuacao e frases (verificado — textos visiveis OK)
 
 ## Bugs UX (encontrados na revisao visual)
 - [x] 1. "@@rua" duplicado na lista de Proximas Acoes (fix parser CSV + sanitize dados)
