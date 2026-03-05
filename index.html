@@ -1143,6 +1143,28 @@ select { cursor: pointer; }
   width: 100%;
   padding: 10px 12px;
 }
+.password-wrapper {
+  position: relative;
+}
+.password-wrapper input {
+  padding-right: 40px !important;
+}
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  line-height: 1;
+}
+.password-toggle:hover {
+  color: var(--text-primary);
+}
 .auth-toggle {
   text-align: center;
   font-size: 12px;
@@ -1386,7 +1408,10 @@ select { cursor: pointer; }
       </div>
       <div class="form-group">
         <label>Senha</label>
-        <input type="password" id="auth-password" placeholder="Sua senha" onkeydown="if(event.key==='Enter')handleLogin()">
+        <div class="password-wrapper">
+          <input type="password" id="auth-password" placeholder="Sua senha" onkeydown="if(event.key==='Enter')handleLogin()">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility(this)" tabindex="-1">👁</button>
+        </div>
       </div>
       <button class="btn btn-primary" style="width:100%;padding:10px;font-size:14px" onclick="handleLogin()" id="auth-login-btn">Entrar</button>
       <p class="auth-toggle">Não tem conta? <a href="#" onclick="toggleAuthForm('register');return false" tabindex="0">Criar conta</a></p>
@@ -1399,11 +1424,17 @@ select { cursor: pointer; }
       </p>
       <div class="form-group">
         <label>Nova Senha</label>
-        <input type="password" id="auth-new-password" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter')handleSetNewPassword()">
+        <div class="password-wrapper">
+          <input type="password" id="auth-new-password" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter')handleSetNewPassword()">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility(this)" tabindex="-1">👁</button>
+        </div>
       </div>
       <div class="form-group">
         <label>Confirmar Nova Senha</label>
-        <input type="password" id="auth-new-password-confirm" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')handleSetNewPassword()">
+        <div class="password-wrapper">
+          <input type="password" id="auth-new-password-confirm" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')handleSetNewPassword()">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility(this)" tabindex="-1">👁</button>
+        </div>
       </div>
       <button class="btn btn-primary" style="width:100%;padding:10px;font-size:14px" onclick="handleSetNewPassword()" id="auth-newpassword-btn">Salvar Nova Senha</button>
     </div>
@@ -1431,7 +1462,10 @@ select { cursor: pointer; }
       </div>
       <div class="form-group">
         <label>Senha</label>
-        <input type="password" id="auth-reg-password" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter')handleRegister()">
+        <div class="password-wrapper">
+          <input type="password" id="auth-reg-password" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter')handleRegister()">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility(this)" tabindex="-1">👁</button>
+        </div>
       </div>
       <button class="btn btn-primary" style="width:100%;padding:10px;font-size:14px" onclick="handleRegister()" id="auth-register-btn">Criar Conta</button>
       <p class="auth-toggle">Já tem conta? <a href="#" onclick="toggleAuthForm('login');return false" tabindex="0">Fazer login</a></p>
@@ -4411,6 +4445,18 @@ function confirmImport() {
 // ==========================================================================
 
 let pending2FAEmail = null;
+let loginInProgress = false;
+
+function togglePasswordVisibility(btn) {
+  const input = btn.parentElement.querySelector('input');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
+}
 
 async function verify2FA() {
   if (!pending2FAEmail) return;
@@ -4477,9 +4523,11 @@ async function handleLogin() {
   btn.textContent = 'Entrando...';
   btn.disabled = true;
 
+  loginInProgress = true;
   const { data: authData, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
   if (error) {
+    loginInProgress = false;
     btn.textContent = 'Entrar';
     btn.disabled = false;
     const msgs = {
@@ -4517,6 +4565,7 @@ async function handleLogin() {
     return;
   }
 
+  loginInProgress = false;
   btn.textContent = 'Entrar';
   btn.disabled = false;
   onAuthSuccess();
@@ -4773,13 +4822,16 @@ updateShortcutHints();
     return;
   }
 
-  // Check existing session first
+  // Detect recovery flow from URL
+  const isRecoveryFlow = window.location.hash.includes('type=recovery');
+
+  // Check existing session first (original flow)
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) {
+  if (session && !isRecoveryFlow) {
     currentUser = session.user;
     await loadCloudData();
     onAuthSuccess();
-  } else {
+  } else if (!session) {
     document.getElementById('auth-overlay').style.display = 'flex';
   }
 
@@ -4789,7 +4841,7 @@ updateShortcutHints();
       toggleAuthForm('newpassword');
       document.getElementById('auth-overlay').style.display = 'flex';
       showAuthMessage('Digite sua nova senha abaixo.', 'info');
-    } else if (event === 'SIGNED_IN' && session && !currentUser) {
+    } else if (event === 'SIGNED_IN' && session && !currentUser && !loginInProgress) {
       currentUser = session.user;
       await loadCloudData();
       onAuthSuccess();

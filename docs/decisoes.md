@@ -36,5 +36,6 @@
 
 ## Workflow do Claude Code
 - Anti-perda de contexto via docs/ (tarefas.md, decisoes.md, checkpoint.md)
-- MCP Chrome DevTools para acesso ao navegador (porta 9222)
+- MCP Chrome DevTools com --autoConnect (metodo oficial Chrome 144+, sem --remote-debugging-port)
 - Windows: `claude mcp add` com `cmd /c` requer fix manual — o CLI parseia `/c` como `C:/`
+- Chrome debug com --user-data-dir isolado nao funciona para carregar CDN externos (net::ERR_FAILED) — usar Chrome normal + autoConnect
