@@ -20,8 +20,12 @@
 - [x] Bug fix: user-info race condition (getSession antes do onAuthStateChange)
 - [x] Mensagens de erro traduzidas para PT-BR
 - [x] Usuarios de teste deletados do Supabase
-- [ ] Teste: fluxo completo reset de senha (clicar link email → nova senha)
-- [ ] Teste: 2FA ativar/desativar + login com codigo
+- [x] Teste: fluxo completo reset de senha (clicar link email → nova senha)
+- [x] Teste: 2FA ativar + login com codigo (formulario aparece, OTP enviado)
+- [x] Fix: PASSWORD_RECOVERY handler (isRecoveryFlow flag)
+- [x] Fix: 2FA login (loginInProgress flag)
+- [x] Botao mostrar/esconder senha
+- [x] Templates email Supabase traduzidos para PT-BR
 
 ## Email
 - [x] SMTP customizado via Resend configurado no Supabase (smtp.resend.com:465)
@@ -30,7 +34,7 @@
 - [x] Adicionar 4 registros DNS no Cloudflare (DKIM + MX + SPF + DMARC)
 - [x] Verificar dominio no Resend (verificado 05/03/2026 19:05)
 - [x] Atualizar sender email no Supabase para noreply@sal.dev.br
-- [ ] Testar envio de email via Resend (criar conta ou reset de senha)
+- [x] Testar envio de email via Resend (criar conta + reset de senha — ambos OK)
 
 ## Melhorias (05/03/2026)
 - [x] Busca Global (Ctrl+F) — busca em todas as listas
@@ -88,5 +92,6 @@
 - [x] MCP Chrome DevTools instalado (claude mcp add)
 - [x] Bug Windows corrigido: `/c` → `C:/` no args do MCP (fix manual em ~/.claude.json)
 - [x] Pacote MCP corrigido: `@anthropic-ai/mcp-chrome-devtools` → `chrome-devtools-mcp`
-- [x] Atalho "Google Claude" criado no Desktop (Chrome com debug porta 9222)
-- [x] Abrir Chrome pelo atalho + reiniciar Claude Code → verificar MCP funcionando
+- [x] Atalho "Google Claude" criado no Desktop
+- [x] MCP reconfigurado para --autoConnect (metodo oficial Chrome 144+)
+- [x] Ativar remote debugging: chrome://inspect/#remote-debugging + reiniciar Claude Code
