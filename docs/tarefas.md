@@ -27,7 +27,7 @@
 - [x] SMTP customizado via Resend configurado no Supabase (smtp.resend.com:465)
 - [x] Rate limit aumentado para 30 emails/hora
 - [x] Dominio sal.dev.br adicionado no Resend (sa-east-1)
-- [ ] Adicionar 3 registros DNS no Registro.br (DKIM + MX + SPF)
+- [x] Adicionar 4 registros DNS no Cloudflare (DKIM + MX + SPF + DMARC)
 - [ ] Verificar dominio no Resend
 - [ ] Atualizar sender email no Supabase para noreply@sal.dev.br
 - [ ] Testar envio de email via Resend (criar conta ou reset de senha)
@@ -43,7 +43,7 @@
 - [x] Estatisticas expandidas — grafico semanal de itens concluidos
 - [x] Onboarding tutorial interativo — tour guiado com spotlight
 - [x] Atalhos de teclado extras — "?" para ajuda, gestos touch
-- [ ] Deploy das melhorias
+- [x] Deploy das melhorias
 
 ## Importacao de tarefas
 - [x] Modal "Importar Tarefas" com 3 modos (CSV, texto livre, texto estruturado)
