@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>GTD - Getting Things Done</title>
 
+<!-- Kill stale Service Workers immediately -->
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(r) { r.unregister(); });
+  });
+  if (window.caches) {
+    caches.keys().then(function(keys) {
+      keys.forEach(function(k) { caches.delete(k); });
+    });
+  }
+}
+</script>
+
 <!-- Security -->
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="no-referrer">
@@ -1869,7 +1883,15 @@ let supabaseClient = null;
 let currentUser = null;
 
 if (SUPABASE_CONFIGURED && window.supabase) {
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      lock: async (name, acquireTimeout, fn) => await fn(),
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    },
+    realtime: { params: { eventsPerSecond: 0 } }
+  });
 }
 
 const DEFAULT_CONTEXTS = ['@Escritório','@Casa','@Computador','@Telefone','@Online','@Rua','@Qualquer Lugar'];
@@ -4537,10 +4559,25 @@ async function handleLogin() {
   const btn = document.getElementById('auth-login-btn');
   btn.textContent = 'Entrando...';
   btn.disabled = true;
-
   loginInProgress = true;
+
   try {
-    const { data: authData, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    // Use fetch directly to avoid Supabase SDK Web Lock deadlock on Safari iOS
+    const resp = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ email, password })
+    });
+    const json = await resp.json();
+    if (!resp.ok) {
+      const error = { message: json.error_description || json.msg || json.error || 'Erro desconhecido' };
+      throw error;
+    }
+    // Set session in Supabase client
+    await supabaseClient.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token });
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    const authData = { user };
+    const error = null;
 
     if (error) {
       loginInProgress = false;
@@ -4560,7 +4597,6 @@ async function handleLogin() {
 
     // Check if user has 2FA enabled
     if (data.twoFactorEnabled) {
-      // Send OTP to email
       const { error: otpError } = await supabaseClient.auth.signInWithOtp({
         email,
         options: { shouldCreateUser: false }
@@ -4864,13 +4900,15 @@ updateShortcutHints();
   // Detect recovery flow from URL
   const isRecoveryFlow = window.location.hash.includes('type=recovery');
 
-  // Check existing session first (original flow)
+  // Check existing session (with 5s timeout to prevent hangs on Safari iOS)
   let session = null;
   try {
-    const { data } = await supabaseClient.auth.getSession();
+    const { data } = await Promise.race([
+      supabaseClient.auth.getSession(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('getSession timeout')), 5000))
+    ]);
     session = data?.session;
   } catch (e) {
-    // getSession failed (network/timeout) — show login
     console.error('getSession error:', e);
   }
   if (session && !isRecoveryFlow) {
