@@ -30,5 +30,13 @@ App GTD deployed em https://sal.dev.br (+ https://metodogtd.pages.dev). DNS prop
 - Fix: validacao JS code.length !== 6 → aceita 6 a 8 digitos
 - Deploy com correcoes OTP
 
+## O que foi feito (sessao 05/03/2026 noite 4)
+- Fix iPhone: app-container escondido por default (display:none), so mostra apos auth
+- Fix iPhone: sidebar-backdrop overlay para fechar sidebar no mobile (touch)
+- Fix: closeSidebar() e toggleSidebar() funcooes dedicadas
+- Deploy Cloudflare Pages com ambas correcoes
+- Teste emulador iPhone 14 Pro: login + sidebar OK
+
 ## Proximo passo
-1. Futuro: Migracao banco JSONB → rows individuais (habilita Realtime + CLI)
+1. Pedir usuario real iPhone reteste apos deploy
+2. Futuro: Migracao banco JSONB → rows individuais (habilita Realtime + CLI)

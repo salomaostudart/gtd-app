@@ -89,6 +89,8 @@
 - [x] 12. maximum-scale=1.0 no viewport
 - [x] 13. 100vh -> 100dvh com fallback
 - [x] 14. Dashboard grid 2 colunas no mobile (forcado via media query)
+- [x] 15. iPhone: login nao aparecia (app-container hidden by default + onAuthSuccess)
+- [x] 16. iPhone: sidebar nao fechava (sidebar-backdrop overlay + closeSidebar)
 
 ## Infraestrutura
 - [x] MCP Chrome DevTools instalado (claude mcp add)
