@@ -1398,7 +1398,7 @@ select { cursor: pointer; }
 <body>
 
 <!-- Auth / Login screen -->
-<div class="auth-overlay" id="auth-overlay" style="display:none">
+<div class="auth-overlay" id="auth-overlay">
   <div class="auth-box">
     <div class="auth-logo">GTD</div>
     <div class="auth-subtitle">Getting Things Done</div>
@@ -1520,8 +1520,8 @@ select { cursor: pointer; }
   </div>
 </div>
 
-<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
 <div class="app" id="app-container" style="display:none">
+<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -1770,6 +1770,13 @@ select { cursor: pointer; }
       <div class="empty-state" style="padding:20px"><p class="text-muted text-sm">Digite para buscar em Inbox, Ações, Projetos, Calendário, Aguardando, Algum Dia e Referência.</p></div>
     </div>
   </div>
+
+<!-- FAB (mobile quick capture) -->
+<button class="fab" id="fab-capture" onclick="openQuickCapture()" title="Captura Rápida">+</button>
+
+<!-- Review Back Button (floating) -->
+<button class="review-back-btn" id="review-back-btn" onclick="navigateTo('review')">&#128270; Voltar à Revisão</button>
+
 </div>
 
 <!-- Modal -->
@@ -1782,12 +1789,6 @@ select { cursor: pointer; }
   <div class="tutorial-spotlight" id="tutorial-spotlight"></div>
   <div class="tutorial-tooltip" id="tutorial-tooltip"></div>
 </div>
-
-<!-- FAB (mobile quick capture) -->
-<button class="fab" id="fab-capture" onclick="openQuickCapture()" title="Captura Rápida">+</button>
-
-<!-- Review Back Button (floating) -->
-<button class="review-back-btn" id="review-back-btn" onclick="navigateTo('review')">&#128270; Voltar à Revisão</button>
 
 <!-- Toast Container -->
 <div class="toast-container" id="toast-container"></div>
@@ -4538,51 +4539,59 @@ async function handleLogin() {
   btn.disabled = true;
 
   loginInProgress = true;
-  const { data: authData, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  try {
+    const { data: authData, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-  if (error) {
+    if (error) {
+      loginInProgress = false;
+      btn.textContent = 'Entrar';
+      btn.disabled = false;
+      const msgs = {
+        'Invalid login credentials': 'Email ou senha incorretos.',
+        'Email not confirmed': 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
+        'email rate limit exceeded': 'Limite de e-mails atingido. Aguarde alguns minutos e tente novamente.'
+      };
+      showAuthMessage(msgs[error.message] || error.message, 'error');
+      return;
+    }
+
+    currentUser = authData.user;
+    await loadCloudData();
+
+    // Check if user has 2FA enabled
+    if (data.twoFactorEnabled) {
+      // Send OTP to email
+      const { error: otpError } = await supabaseClient.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false }
+      });
+      if (otpError) {
+        btn.textContent = 'Entrar';
+        btn.disabled = false;
+        showAuthMessage('Erro ao enviar código de verificação. Tente novamente.', 'error');
+        await supabaseClient.auth.signOut();
+        currentUser = null;
+        return;
+      }
+      pending2FAEmail = email;
+      btn.textContent = 'Entrar';
+      btn.disabled = false;
+      toggleAuthForm('2fa');
+      showAuthMessage('Código de verificação enviado para ' + email, 'info');
+      return;
+    }
+
     loginInProgress = false;
     btn.textContent = 'Entrar';
     btn.disabled = false;
-    const msgs = {
-      'Invalid login credentials': 'Email ou senha incorretos.',
-      'Email not confirmed': 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
-      'email rate limit exceeded': 'Limite de e-mails atingido. Aguarde alguns minutos e tente novamente.'
-    };
-    showAuthMessage(msgs[error.message] || error.message, 'error');
-    return;
-  }
-
-  currentUser = authData.user;
-  await loadCloudData();
-
-  // Check if user has 2FA enabled
-  if (data.twoFactorEnabled) {
-    // Send OTP to email
-    const { error: otpError } = await supabaseClient.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false }
-    });
-    if (otpError) {
-      btn.textContent = 'Entrar';
-      btn.disabled = false;
-      showAuthMessage('Erro ao enviar código de verificação. Tente novamente.', 'error');
-      await supabaseClient.auth.signOut();
-      currentUser = null;
-      return;
-    }
-    pending2FAEmail = email;
+    onAuthSuccess();
+  } catch (e) {
+    console.error('Login error:', e);
+    loginInProgress = false;
     btn.textContent = 'Entrar';
     btn.disabled = false;
-    toggleAuthForm('2fa');
-    showAuthMessage('Código de verificação enviado para ' + email, 'info');
-    return;
+    showAuthMessage('Erro ao entrar. Verifique sua conexão e tente novamente.', 'error');
   }
-
-  loginInProgress = false;
-  btn.textContent = 'Entrar';
-  btn.disabled = false;
-  onAuthSuccess();
 }
 
 async function handleRegister() {
@@ -4598,33 +4607,40 @@ async function handleRegister() {
   btn.textContent = 'Criando conta...';
   btn.disabled = true;
 
-  const { data: authData, error } = await supabaseClient.auth.signUp({
-    email,
-    password,
-    options: { data: { name } }
-  });
+  try {
+    const { data: authData, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: { data: { name } }
+    });
 
-  btn.textContent = 'Criar Conta';
-  btn.disabled = false;
+    btn.textContent = 'Criar Conta';
+    btn.disabled = false;
 
-  if (error) {
-    const regMsgs = {
-      'User already registered': 'Este e-mail já está cadastrado.',
-      'Password should be at least 6 characters': 'A senha deve ter pelo menos 6 caracteres.',
-      'Unable to validate email address: invalid format': 'Formato de e-mail inválido.',
-      'Signups not allowed for this instance': 'Registros desabilitados. Solicite um convite ao administrador.',
-      'email rate limit exceeded': 'Limite de e-mails atingido. Aguarde alguns minutos e tente novamente.'
-    };
-    showAuthMessage(regMsgs[error.message] || error.message, 'error');
-    return;
-  }
+    if (error) {
+      const regMsgs = {
+        'User already registered': 'Este e-mail já está cadastrado.',
+        'Password should be at least 6 characters': 'A senha deve ter pelo menos 6 caracteres.',
+        'Unable to validate email address: invalid format': 'Formato de e-mail inválido.',
+        'Signups not allowed for this instance': 'Registros desabilitados. Solicite um convite ao administrador.',
+        'email rate limit exceeded': 'Limite de e-mails atingido. Aguarde alguns minutos e tente novamente.'
+      };
+      showAuthMessage(regMsgs[error.message] || error.message, 'error');
+      return;
+    }
 
-  if (authData.user && !authData.session) {
-    toggleAuthForm('login', true);
-    showAuthMessage('Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'success');
-  } else if (authData.session) {
-    currentUser = authData.user;
-    onAuthSuccess();
+    if (authData.user && !authData.session) {
+      toggleAuthForm('login', true);
+      showAuthMessage('Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'success');
+    } else if (authData.session) {
+      currentUser = authData.user;
+      onAuthSuccess();
+    }
+  } catch (e) {
+    console.error('Register error:', e);
+    btn.textContent = 'Criar Conta';
+    btn.disabled = false;
+    showAuthMessage('Erro ao criar conta. Verifique sua conexão e tente novamente.', 'error');
   }
 }
 
@@ -4831,6 +4847,7 @@ updateShortcutHints();
 (async function initApp() {
   if (!SUPABASE_CONFIGURED) {
     // Local-only mode (Supabase not configured in code)
+    document.getElementById('auth-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = '';
     navigateTo('dashboard');
     showWelcomeIfNeeded();
@@ -4848,14 +4865,20 @@ updateShortcutHints();
   const isRecoveryFlow = window.location.hash.includes('type=recovery');
 
   // Check existing session first (original flow)
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  let session = null;
+  try {
+    const { data } = await supabaseClient.auth.getSession();
+    session = data?.session;
+  } catch (e) {
+    // getSession failed (network/timeout) — show login
+    console.error('getSession error:', e);
+  }
   if (session && !isRecoveryFlow) {
     currentUser = session.user;
     await loadCloudData();
     onAuthSuccess();
-  } else if (!session) {
-    document.getElementById('auth-overlay').style.display = 'flex';
   }
+  // If no session, auth-overlay is already visible by default
 
   // Register auth listener AFTER init to avoid race conditions
   supabaseClient.auth.onAuthStateChange(async (event, session) => {

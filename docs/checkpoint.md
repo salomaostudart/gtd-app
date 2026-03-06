@@ -37,6 +37,18 @@ App GTD deployed em https://sal.dev.br (+ https://metodogtd.pages.dev). DNS prop
 - Deploy Cloudflare Pages com ambas correcoes
 - Teste emulador iPhone 14 Pro: login + sidebar OK
 
+## O que foi feito (sessao 05/03/2026 noite 5)
+- Fix: auth-overlay visivel por default (sem display:none inline)
+- Fix: FAB e review-btn movidos para dentro do app-container
+- Fix: sidebar-backdrop movido para dentro do app-container
+- Fix: try-catch no getSession(), handleLogin() e handleRegister()
+- Fix: SW cache bumped v3 → v4 (forca download versao nova)
+- Deploy 3x com correcoes incrementais
+- Resultado: login aparece no iPhone, mas app ainda nao funciona bem no mobile real
+- Emulador Chrome OK, iPhone real com problemas persistentes
+
 ## Proximo passo
-1. Pedir usuario real iPhone reteste apos deploy
+1. **PRIORIDADE: Bugs Mobile/iPhone** — app nao funciona corretamente no Safari mobile real
+   - Testar com iPhone fisico ou Safari remote debugging
+   - Emulador Chrome nao reproduz os bugs reais do Safari
 2. Futuro: Migracao banco JSONB → rows individuais (habilita Realtime + CLI)
