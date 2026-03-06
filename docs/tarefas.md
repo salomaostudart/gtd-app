@@ -59,6 +59,14 @@
 - [x] Tela de preview antes de confirmar importacao
 - [x] Botao na sidebar
 
+## Bugs Mobile/iPhone (pendente)
+- [ ] Tela preta no iPhone (app não carrega corretamente no Safari mobile)
+- [ ] "Entrando..." trava com dados inválidos (sem feedback de erro no mobile)
+- [ ] Cadastro não loga automaticamente (fluxo confuso para usuário novo)
+- [ ] Testar fluxo completo em iPhone real: cadastro → confirmação email → login → uso
+- [ ] Sidebar: validar que backdrop fecha corretamente no touch real (não só emulador)
+- [ ] Service Worker: cache antigo pode impedir atualização no mobile
+
 ## Migracao banco de dados (JSONB → rows)
 - [ ] Criar tabela `tasks` no Supabase (1 row por tarefa, com RLS)
 - [ ] Migrar dados existentes do JSONB → rows individuais
