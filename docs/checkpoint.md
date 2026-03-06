@@ -37,18 +37,35 @@ App GTD deployed em https://sal.dev.br (+ https://metodogtd.pages.dev). DNS prop
 - Deploy Cloudflare Pages com ambas correcoes
 - Teste emulador iPhone 14 Pro: login + sidebar OK
 
-## O que foi feito (sessao 05/03/2026 noite 5)
+## O que foi feito (sessao 06/03/2026 madrugada)
 - Fix: auth-overlay visivel por default (sem display:none inline)
 - Fix: FAB e review-btn movidos para dentro do app-container
 - Fix: sidebar-backdrop movido para dentro do app-container
 - Fix: try-catch no getSession(), handleLogin() e handleRegister()
-- Fix: SW cache bumped v3 → v4 (forca download versao nova)
-- Deploy 3x com correcoes incrementais
-- Resultado: login aparece no iPhone, mas app ainda nao funciona bem no mobile real
-- Emulador Chrome OK, iPhone real com problemas persistentes
+- Fix: SW self-destruct (sw.js limpa caches e se desregistra)
+- Fix: CSP headers — adicionado wss:// para WebSocket do Supabase
+- Fix: Supabase createClient com lock no-op (evita Web Locks deadlock no Safari)
+- Fix: Realtime desabilitado no createClient
+- Fix: getSession com timeout de 5s no initApp
+- Fix: handleLogin com fetch direto (bypass do SDK signInWithPassword)
+- Fix: script killer de SW no <head> do index.html
+- Teste minimo (test-login.html) funciona perfeitamente no iPhone — tanto SDK quanto fetch
+- Teste minimo deployado no Cloudflare com CSP — tambem funciona
+- DIAGNOSTICO: Service Worker antigo serve JS cacheado, impede codigo novo de rodar
+- EM ANDAMENTO: usuario precisa acessar sal.dev.br 3x no Safari normal para matar SW
+
+## Causa raiz identificada
+O Service Worker antigo (gtd-v3/v4) cacheia o index.html e serve versao velha do JS.
+Mesmo com sw.js self-destruct deployado, o SW antigo precisa de multiplas visitas para:
+1. Detectar que sw.js mudou (browser faz check periodico)
+2. Instalar novo SW (self-destruct)
+3. Ativar e limpar caches
+4. Pagina recarrega com codigo novo
+Script killer no <head> do index.html ajuda a acelerar o processo.
 
 ## Proximo passo
-1. **PRIORIDADE: Bugs Mobile/iPhone** — app nao funciona corretamente no Safari mobile real
-   - Testar com iPhone fisico ou Safari remote debugging
-   - Emulador Chrome nao reproduz os bugs reais do Safari
-2. Futuro: Migracao banco JSONB → rows individuais (habilita Realtime + CLI)
+1. **PRIORIDADE: Confirmar que SW morreu** — usuario acessar sal.dev.br 3x no Safari normal
+2. Testar login no iPhone apos SW limpo
+3. Se funcionar: commit, push, remover debug code e test files
+4. Se NAO funcionar: investigar mais (CSP, ITP Safari, storage)
+5. Futuro: Migracao banco JSONB → rows individuais (habilita Realtime + CLI)

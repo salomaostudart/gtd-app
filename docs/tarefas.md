@@ -59,13 +59,17 @@
 - [x] Tela de preview antes de confirmar importacao
 - [x] Botao na sidebar
 
-## Bugs Mobile/iPhone (pendente)
-- [ ] Tela preta no iPhone (app não carrega corretamente no Safari mobile)
-- [ ] "Entrando..." trava com dados inválidos (sem feedback de erro no mobile)
-- [ ] Cadastro não loga automaticamente (fluxo confuso para usuário novo)
-- [ ] Testar fluxo completo em iPhone real: cadastro → confirmação email → login → uso
-- [ ] Sidebar: validar que backdrop fecha corretamente no touch real (não só emulador)
-- [ ] Service Worker: cache antigo pode impedir atualização no mobile
+## Bugs Mobile/iPhone (em andamento)
+- [x] Tela preta no iPhone → auth-overlay visivel por default + FAB dentro do app-container
+- [x] Diagnostico: test-login.html funciona no iPhone (SDK + fetch OK)
+- [x] Diagnostico: test-login no Cloudflare com CSP funciona (CSP nao eh o problema)
+- [x] Causa raiz: Service Worker antigo serve JS cacheado → login usa codigo velho
+- [x] Fix: sw.js self-destruct + script killer no head + lock no-op + fetch direto
+- [ ] Confirmar SW morreu apos 3 visitas no Safari normal
+- [ ] Testar login no iPhone apos SW limpo
+- [ ] Testar sidebar backdrop no iPhone real
+- [ ] Cadastro novo usuario: fluxo completo (cadastro → email confirmacao → login)
+- [ ] Remover debug code e test files apos confirmacao
 
 ## Migracao banco de dados (JSONB → rows)
 - [ ] Criar tabela `tasks` no Supabase (1 row por tarefa, com RLS)
