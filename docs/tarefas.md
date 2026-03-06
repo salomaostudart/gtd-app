@@ -71,9 +71,30 @@
 - [x] Fix: validação de email no login
 - [x] Fix: meta tags no-cache para Safari
 - [x] Testar login no iPhone — FUNCIONANDO
-- [ ] Testar sidebar backdrop no iPhone real
-- [ ] Cadastro novo usuario: fluxo completo (cadastro → email confirmacao → login)
-- [ ] Remover debug code e test files apos confirmacao
+- [x] Testar sidebar backdrop no iPhone real — OK
+- [x] Cadastro novo usuario: fluxo completo — OK
+- [x] Remover debug code e test files (test-login.html, links.html, deploy-test/, screenshots/)
+
+## UX Mobile (sessao 06/03/2026 tarde)
+- [x] Welcome screen: overflow scroll + compacto no mobile
+- [x] Tutorial tooltips: reposiciona acima se nao cabe abaixo
+- [x] Landscape: permite scroll quando tela curta
+- [x] FAB "+": menu expansivel (Captura Rapida, Inbox, Processar, Buscar)
+- [x] Sidebar: Configuracoes (grupo) com Tema + Seguranca
+- [x] Sidebar: Importar/Exportar (grupo) com Exportar, Restaurar Backup, Importar Tarefas
+- [x] Sidebar: Rever Tutorial (botao direto)
+- [x] Emoji importar tarefas corrigido (seta para baixo)
+- [x] Tutorial mobile: ultimo passo fala do botao "+" em vez de Ctrl+K
+- [x] Shortcuts (Ctrl+F, Ctrl+K) escondidos no mobile
+- [x] Cadastro email duplicado: mensagem correta
+- [x] Session preload: CSS no head evita flash do login ao recarregar
+- [x] localStorage session fallback quando getSession trava no Safari
+- [x] APP_VERSION cache-bust: force reload quando versao muda
+- [x] Cache-Control: no-cache no _headers
+- [x] SW re-registration desabilitada (so self-destruct)
+- [ ] **PENDENTE**: Safari iOS cache persistente — usuario precisa limpar dados em Configuracoes > Safari > Avancado > Dados de Sites > Remover Todos
+- [ ] **PENDENTE**: Welcome screen ainda nao cabe 100% no iPhone (precisa scroll minimo)
+- [ ] **PENDENTE**: Dashboard vazio apos reload no iPhone (SW cache antigo pode ser a causa)
 
 ## Migracao banco de dados (JSONB → rows)
 - [ ] Criar tabela `tasks` no Supabase (1 row por tarefa, com RLS)
