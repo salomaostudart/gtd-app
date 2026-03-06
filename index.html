@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>GTD - Getting Things Done</title>
 
-<!-- Kill stale Service Workers immediately -->
+<!-- Kill stale Service Workers + version-based cache bust -->
 <script>
+var APP_VERSION = '2026030601';
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(regs) {
     regs.forEach(function(r) { r.unregister(); });
@@ -17,6 +18,16 @@ if ('serviceWorker' in navigator) {
     });
   }
 }
+// Force reload if cached version is outdated
+try {
+  var cachedVer = localStorage.getItem('gtd-app-version');
+  if (cachedVer && cachedVer !== APP_VERSION) {
+    localStorage.setItem('gtd-app-version', APP_VERSION);
+    location.reload(true);
+  } else {
+    localStorage.setItem('gtd-app-version', APP_VERSION);
+  }
+} catch(e) {}
 </script>
 
 <!-- No-cache for Safari -->
@@ -112,6 +123,9 @@ body {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  body { overflow-y: auto; -webkit-overflow-scrolling: touch; }
 }
 
 /* Scrollbar */
@@ -875,7 +889,7 @@ select { cursor: pointer; }
   .mobile-toggle { display: flex !important; }
   .main-content { padding: 16px; }
   .main-header { padding: 16px; }
-  .fab { display: flex !important; }
+  .fab-container { display: block !important; }
   .item-actions { opacity: 1 !important; }
   .drag-handle { display: none; }
   .action-filters { flex-wrap: wrap; gap: 8px; }
@@ -887,12 +901,24 @@ select { cursor: pointer; }
   .stat-card .stat-number { font-size: 26px; }
 }
 
+/* Sidebar groups */
+.sidebar-group { margin-top: 2px; }
+.sidebar-group-toggle { display: flex; align-items: center; }
+.sidebar-group-arrow { margin-left: auto; font-size: 10px; color: var(--text-muted); transition: transform 0.2s; }
+.sidebar-group.open .sidebar-group-arrow { transform: rotate(90deg); }
+.sidebar-group-items { padding-left: 12px; }
+.sidebar-group-items .nav-item { font-size: 12px; padding: 6px 8px; }
+
 /* FAB (Floating Action Button) - mobile only */
-.fab {
+.fab-container {
   display: none;
   position: fixed;
   bottom: 24px;
   right: 24px;
+  z-index: 40;
+}
+.fab {
+  display: flex;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -903,11 +929,63 @@ select { cursor: pointer; }
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(108,140,255,0.4);
-  z-index: 40;
   cursor: pointer;
   transition: var(--transition);
+  position: relative;
+  z-index: 2;
 }
 .fab:hover { background: var(--accent-hover); transform: scale(1.05); }
+.fab-menu {
+  position: absolute;
+  bottom: 66px;
+  right: 0;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+.fab-container.open .fab-menu { display: flex; }
+.fab-container.open .fab { transform: rotate(45deg); }
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  cursor: pointer;
+  animation: fabSlideUp 0.2s ease;
+}
+.fab-menu-item span.fab-label {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.fab-menu-item button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  cursor: pointer;
+}
+@keyframes fabSlideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.fab-backdrop {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 39;
+  background: rgba(0,0,0,0.3);
+}
+.fab-backdrop.open { display: block; }
 
 /* Swipe action indicators */
 .item.swiping-right { transform: translateX(var(--swipe-x, 0)); transition: none; }
@@ -1046,8 +1124,11 @@ select { cursor: pointer; }
   background: var(--bg-primary);
   z-index: 500;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 0;
   transition: opacity 0.5s ease;
 }
 .welcome-overlay.hiding { opacity: 0; pointer-events: none; }
@@ -1060,6 +1141,18 @@ select { cursor: pointer; }
   width: 90vw;
   text-align: center;
   box-shadow: 0 8px 40px rgba(108,140,255,0.15);
+  flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .welcome-box { padding: 24px 20px; }
+  .welcome-box .welcome-logo { font-size: 32px; margin-bottom: 2px; }
+  .welcome-box .welcome-subtitle { font-size: 12px; margin-bottom: 14px; }
+  .welcome-box .welcome-desc { font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
+  .welcome-box .welcome-steps { margin-bottom: 14px; }
+  .welcome-box .welcome-step { padding: 6px 0; gap: 8px; }
+  .welcome-box .welcome-step .step-icon { font-size: 15px; width: 22px; }
+  .welcome-box .welcome-step .step-text { font-size: 12px; line-height: 1.4; }
+  .welcome-box .welcome-tip { padding: 8px 12px; font-size: 11px; margin-bottom: 14px; }
 }
 .welcome-box .welcome-logo {
   font-size: 48px;
@@ -1410,9 +1503,22 @@ select { cursor: pointer; }
 /* Safe area for iPhone notch/home indicator */
 .mobile-header { padding-top: env(safe-area-inset-top); }
 .main-content { padding-bottom: env(safe-area-inset-bottom); }
-.fab { bottom: calc(24px + env(safe-area-inset-bottom)); }
+.fab-container { bottom: calc(24px + env(safe-area-inset-bottom)); }
 .sidebar { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
 </style>
+<script>
+// If user has a saved session, hide auth and show app immediately to avoid flash
+var __hasSession = false;
+try {
+  __hasSession = !!localStorage.getItem('sb-cxnziboaviahmfcajqcz-auth-token');
+  if (__hasSession) {
+    var s = document.createElement('style');
+    s.id = 'session-preload';
+    s.textContent = '#auth-overlay{display:none!important}#app-container{display:flex!important}';
+    document.head.appendChild(s);
+  }
+} catch(e) {}
+</script>
 </head>
 <body>
 
@@ -1602,21 +1708,38 @@ select { cursor: pointer; }
         <span class="icon">&#9889;</span> Captura Rápida
         <span class="badge" id="shortcut-badge-capture" style="background:var(--accent-bg);color:var(--accent);font-size:10px"></span>
       </div>
-      <div class="nav-item" onclick="toggleTheme()">
-        <span class="icon" id="theme-icon">&#9788;</span> <span id="theme-label">Tema Claro</span>
+      <div class="nav-item" onclick="restartTutorial()">
+        <span class="icon">&#127891;</span> Rever Tutorial
       </div>
-      <div class="nav-item" onclick="showSecuritySettings()">
-        <span class="icon">&#128274;</span> Segurança
+      <div class="sidebar-group">
+        <div class="nav-item sidebar-group-toggle" onclick="toggleSidebarGroup(this)">
+          <span class="icon">&#9881;</span> Configurações <span class="sidebar-group-arrow">&#9656;</span>
+        </div>
+        <div class="sidebar-group-items" style="display:none">
+          <div class="nav-item" onclick="toggleTheme()">
+            <span class="icon" id="theme-icon">&#9788;</span> <span id="theme-label">Tema Claro</span>
+          </div>
+          <div class="nav-item" onclick="showSecuritySettings()">
+            <span class="icon">&#128274;</span> Segurança
+          </div>
+        </div>
       </div>
-      <div class="nav-item" onclick="exportData()">
-        <span class="icon">&#128190;</span> Exportar Dados
-      </div>
-      <div class="nav-item" onclick="document.getElementById('import-file').click()">
-        <span class="icon">&#128194;</span> Importar Dados
-      </div>
-      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
-      <div class="nav-item" onclick="openImportModal()">
-        <span class="icon">&#128228;</span> Importar Tarefas
+      <div class="sidebar-group">
+        <div class="nav-item sidebar-group-toggle" onclick="toggleSidebarGroup(this)">
+          <span class="icon">&#128196;</span> Importar / Exportar <span class="sidebar-group-arrow">&#9656;</span>
+        </div>
+        <div class="sidebar-group-items" style="display:none">
+          <div class="nav-item" onclick="exportData()">
+            <span class="icon">&#128190;</span> Exportar Dados
+          </div>
+          <div class="nav-item" onclick="document.getElementById('import-file').click()">
+            <span class="icon">&#128194;</span> Restaurar Backup (JSON)
+          </div>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+          <div class="nav-item" onclick="openImportModal()">
+            <span class="icon">&#128229;</span> Importar Tarefas
+          </div>
+        </div>
       </div>
     </div>
   </aside>
@@ -1789,14 +1912,34 @@ select { cursor: pointer; }
       <div class="empty-state" style="padding:20px"><p class="text-muted text-sm">Digite para buscar em Inbox, Ações, Projetos, Calendário, Aguardando, Algum Dia e Referência.</p></div>
     </div>
   </div>
+</div>
 
-<!-- FAB (mobile quick capture) -->
-<button class="fab" id="fab-capture" onclick="openQuickCapture()" title="Captura Rápida">+</button>
+<!-- FAB (mobile quick actions) -->
+<div class="fab-backdrop" id="fab-backdrop" onclick="closeFabMenu()"></div>
+<div class="fab-container" id="fab-container">
+  <div class="fab-menu" id="fab-menu">
+    <div class="fab-menu-item" onclick="closeFabMenu();openQuickCapture()">
+      <span class="fab-label">Captura Rápida</span>
+      <button>&#9889;</button>
+    </div>
+    <div class="fab-menu-item" onclick="closeFabMenu();navigateTo('inbox')">
+      <span class="fab-label">Caixa de Entrada</span>
+      <button>&#9993;</button>
+    </div>
+    <div class="fab-menu-item" onclick="closeFabMenu();navigateTo('process')">
+      <span class="fab-label">Processar Inbox</span>
+      <button>&#9881;</button>
+    </div>
+    <div class="fab-menu-item" onclick="closeFabMenu();openGlobalSearch()">
+      <span class="fab-label">Buscar</span>
+      <button>&#128269;</button>
+    </div>
+  </div>
+  <button class="fab" id="fab-btn" onclick="toggleFabMenu()">+</button>
+</div>
 
 <!-- Review Back Button (floating) -->
 <button class="review-back-btn" id="review-back-btn" onclick="navigateTo('review')">&#128270; Voltar à Revisão</button>
-
-</div>
 
 <!-- Modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
@@ -2005,6 +2148,27 @@ function toggleSidebar() {
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-backdrop').classList.remove('active');
+}
+
+// FAB menu
+function toggleFabMenu() {
+  var c = document.getElementById('fab-container');
+  var b = document.getElementById('fab-backdrop');
+  c.classList.toggle('open');
+  b.classList.toggle('open');
+}
+function closeFabMenu() {
+  document.getElementById('fab-container').classList.remove('open');
+  document.getElementById('fab-backdrop').classList.remove('open');
+}
+
+// Sidebar collapsible groups
+function toggleSidebarGroup(el) {
+  var group = el.parentElement;
+  var items = group.querySelector('.sidebar-group-items');
+  var isOpen = group.classList.contains('open');
+  group.classList.toggle('open');
+  items.style.display = isOpen ? 'none' : 'block';
 }
 
 document.querySelectorAll('.nav-item[data-page]').forEach(item => {
@@ -3523,11 +3687,12 @@ function timeAgo(dateStr) {
 // INTERACTIVE TUTORIAL
 // ==========================================================================
 
+var isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
 const tutorialSteps = [
   {
     target: '.nav-item[data-page="inbox"]',
     title: '1. Capture Tudo',
-    text: 'Coloque aqui qualquer coisa que esta na sua cabeca. Compromissos, ideias, tarefas — tudo vai para a Caixa de Entrada primeiro.'
+    text: 'Coloque aqui qualquer coisa que esta na sua cabeça. Compromissos, ideias, tarefas — tudo vai para a Caixa de Entrada primeiro.'
   },
   {
     target: '.nav-item[data-page="process"]',
@@ -3542,7 +3707,7 @@ const tutorialSteps = [
   {
     target: '.nav-item[data-page="projects"]',
     title: '4. Projetos',
-    text: 'Qualquer resultado que exija mais de 1 ação e um projeto. Cada projeto deve ter sempre uma próxima ação definida.'
+    text: 'Qualquer resultado que exija mais de 1 ação é um projeto. Cada projeto deve ter sempre uma próxima ação definida.'
   },
   {
     target: '.nav-item[data-page="review"]',
@@ -3550,9 +3715,11 @@ const tutorialSteps = [
     text: 'O hábito mais importante do GTD! Reserve 1-2 horas por semana para revisar tudo e manter o sistema atualizado.'
   },
   {
-    target: '#shortcut-badge-capture',
+    target: isMobileDevice ? '#fab-btn' : '#shortcut-badge-capture',
     title: 'Captura Rápida',
-    text: 'Use Ctrl+K (ou Cmd+K) a qualquer momento para capturar algo rapidamente. Ctrl+F abre a busca global.'
+    text: isMobileDevice
+      ? 'Toque no botão + para capturar algo rapidamente, acessar a Caixa de Entrada, processar itens ou buscar.'
+      : 'Use Ctrl+K (ou Cmd+K) a qualquer momento para capturar algo rapidamente. Ctrl+F abre a busca global.'
   }
 ];
 
@@ -3581,9 +3748,14 @@ function showTutorialStep() {
     spotlight.style.width = (rect.width + pad * 2) + 'px';
     spotlight.style.height = (rect.height + pad * 2) + 'px';
 
-    // Position tooltip below or beside spotlight
-    const tooltipTop = rect.bottom + 12;
-    const tooltipLeft = Math.min(Math.max(rect.left, 10), window.innerWidth - 340);
+    // Position tooltip — prefer below, but flip above if no room
+    var tooltipTop = rect.bottom + 12;
+    var tooltipLeft = Math.min(Math.max(rect.left, 10), window.innerWidth - 340);
+    // Estimate tooltip height (~180px) and check if it fits
+    var estimatedHeight = 180;
+    if (tooltipTop + estimatedHeight > window.innerHeight - 10) {
+      tooltipTop = Math.max(10, rect.top - estimatedHeight - 12);
+    }
     tooltip.style.top = tooltipTop + 'px';
     tooltip.style.left = tooltipLeft + 'px';
   }
@@ -3821,12 +3993,22 @@ const modKeyProp = isMac ? 'metaKey' : 'ctrlKey';
 
 // Update shortcut hints in UI
 function updateShortcutHints() {
-  const el = document.getElementById('shortcut-hint-capture');
-  if (el) el.textContent = `${modKey}+K para abrir / Esc para fechar`;
-  const badge = document.getElementById('shortcut-badge-capture');
-  if (badge) badge.textContent = `${modKey}+K`;
-  const searchHint = document.getElementById('shortcut-hint-search');
-  if (searchHint) searchHint.textContent = `${modKey}+F / Esc para fechar`;
+  if (isMobileDevice) {
+    // Hide keyboard shortcut hints on mobile
+    var el = document.getElementById('shortcut-hint-capture');
+    if (el) el.style.display = 'none';
+    var badge = document.getElementById('shortcut-badge-capture');
+    if (badge) badge.style.display = 'none';
+    var searchHint = document.getElementById('shortcut-hint-search');
+    if (searchHint) searchHint.style.display = 'none';
+  } else {
+    var el = document.getElementById('shortcut-hint-capture');
+    if (el) el.textContent = `${modKey}+K para abrir / Esc para fechar`;
+    var badge = document.getElementById('shortcut-badge-capture');
+    if (badge) badge.textContent = `${modKey}+K`;
+    var searchHint = document.getElementById('shortcut-hint-search');
+    if (searchHint) searchHint.textContent = `${modKey}+F / Esc para fechar`;
+  }
 }
 
 // ==========================================================================
@@ -4117,9 +4299,10 @@ function sendNotification(title, body) {
 // PWA SERVICE WORKER
 // ==========================================================================
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
-}
+// SW registration disabled — self-destruct mode until all old caches are cleared
+// if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+//   navigator.serviceWorker.register('sw.js').catch(() => {});
+// }
 
 // ==========================================================================
 // WELCOME / ONBOARDING
@@ -4138,6 +4321,16 @@ function dismissWelcome() {
   const overlay = document.getElementById('welcome-overlay');
   overlay.classList.add('hiding');
   setTimeout(() => overlay.style.display = 'none', 500);
+}
+
+function restartTutorial() {
+  closeSidebar();
+  var key = currentUser ? 'gtd-welcomed-' + currentUser.id : 'gtd-welcomed';
+  localStorage.removeItem(key);
+  var overlay = document.getElementById('welcome-overlay');
+  overlay.classList.remove('hiding');
+  overlay.style.display = 'flex';
+  overlay.scrollTop = 0;
 }
 
 // ==========================================================================
@@ -4675,6 +4868,11 @@ async function handleRegister() {
     }
 
     if (authData.user && !authData.session) {
+      // Supabase returns empty identities when email already exists (anti-enumeration)
+      if (!authData.user.identities || authData.user.identities.length === 0) {
+        showAuthMessage('Este e-mail já está cadastrado. Faça login ou use "Esqueci minha senha".', 'error');
+        return;
+      }
       toggleAuthForm('login', true);
       showAuthMessage('Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'success');
     } else if (authData.session) {
@@ -4767,7 +4965,13 @@ async function handleLogout() {
   hideAuthMessage();
 }
 
+function removeSessionPreload() {
+  var sp = document.getElementById('session-preload');
+  if (sp) sp.remove();
+}
+
 function onAuthSuccess() {
+  removeSessionPreload();
   document.getElementById('auth-overlay').style.display = 'none';
   document.getElementById('app-container').style.display = '';
   updateUserInfo();
@@ -4889,6 +5093,11 @@ function showSyncStatus(type, text) {
 
 updateShortcutHints();
 
+// If session preload is active, render dashboard immediately so cards aren't empty
+if (__hasSession) {
+  try { renderDashboard(); updateBadges(); } catch(e) { console.error('preload render:', e); }
+}
+
 (async function initApp() {
   if (!SUPABASE_CONFIGURED) {
     // Local-only mode (Supabase not configured in code)
@@ -4900,7 +5109,7 @@ updateShortcutHints();
     return;
   }
   if (!supabaseClient) {
-    // Supabase SDK failed to load (CDN blocked or network error)
+    removeSessionPreload();
     document.getElementById('auth-overlay').style.display = 'flex';
     showAuthMessage('Erro ao carregar. Verifique sua conexão e recarregue a página.', 'error');
     return;
@@ -4919,13 +5128,25 @@ updateShortcutHints();
     session = data?.session;
   } catch (e) {
     console.error('getSession error:', e);
+    // Fallback: try to parse session from localStorage if getSession timed out
+    try {
+      var storedSession = JSON.parse(localStorage.getItem('sb-cxnziboaviahmfcajqcz-auth-token'));
+      if (storedSession && storedSession.user) {
+        session = storedSession;
+        console.log('Using localStorage session fallback');
+      }
+    } catch(e2) {}
   }
   if (session && !isRecoveryFlow) {
     currentUser = session.user;
     await loadCloudData();
     onAuthSuccess();
+  } else {
+    // No session or recovery flow — remove preload and show login
+    removeSessionPreload();
+    document.getElementById('auth-overlay').style.display = 'flex';
+    document.getElementById('app-container').style.display = 'none';
   }
-  // If no session, auth-overlay is already visible by default
 
   // Register auth listener AFTER init to avoid race conditions
   supabaseClient.auth.onAuthStateChange(async (event, session) => {
