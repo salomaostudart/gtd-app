@@ -63,9 +63,25 @@ Mesmo com sw.js self-destruct deployado, o SW antigo precisa de multiplas visita
 4. Pagina recarrega com codigo novo
 Script killer no <head> do index.html ajuda a acelerar o processo.
 
+## O que foi feito (sessao 06/03/2026 madrugada 2)
+- Diagnostico completo do bug de login no iPhone usando debug overlay
+- Causa raiz REAL: Safari/WebKit TDZ bug — `let` no escopo global causa "Cannot access before initialization" dentro de functions
+- Fix: 20 variáveis globais `let` → `var`
+- Fix: handleLogin reescrito com XHR callback puro (sem async/await)
+- Fix: validação de formato de email no login
+- Fix: meta tags no-cache para Safari
+- Fix: mensagens de erro traduzidas (email incorreto, conexão, timeout)
+- Login no iPhone Safari: FUNCIONANDO
+
+## Causa raiz REAL (bug do Safari)
+Safari/WebKit tem bug com `let` no escopo global de `<script>` inline.
+Variáveis declaradas com `let` lançam "Cannot access before initialization" quando
+acessadas dentro de function declarations no mesmo escopo, mesmo estando declaradas antes.
+Solução: usar `var` para variáveis globais. Bug conhecido do WebKit.
+
 ## Proximo passo
-1. **PRIORIDADE: Confirmar que SW morreu** — usuario acessar sal.dev.br 3x no Safari normal
-2. Testar login no iPhone apos SW limpo
-3. Se funcionar: commit, push, remover debug code e test files
-4. Se NAO funcionar: investigar mais (CSP, ITP Safari, storage)
+1. Testar sidebar backdrop no iPhone real
+2. Testar cadastro novo usuario (fluxo completo)
+3. Remover debug code e test files (test-login.html, links.html, deploy-test/)
+4. Commit + push + deploy limpo
 5. Futuro: Migracao banco JSONB → rows individuais (habilita Realtime + CLI)

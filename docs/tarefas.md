@@ -65,8 +65,12 @@
 - [x] Diagnostico: test-login no Cloudflare com CSP funciona (CSP nao eh o problema)
 - [x] Causa raiz: Service Worker antigo serve JS cacheado → login usa codigo velho
 - [x] Fix: sw.js self-destruct + script killer no head + lock no-op + fetch direto
-- [ ] Confirmar SW morreu apos 3 visitas no Safari normal
-- [ ] Testar login no iPhone apos SW limpo
+- [x] Confirmar SW morreu apos limpar dados do site no Safari
+- [x] Fix: let → var em 20 variáveis globais (Safari TDZ bug)
+- [x] Fix: handleLogin com XHR callback (sem async/await)
+- [x] Fix: validação de email no login
+- [x] Fix: meta tags no-cache para Safari
+- [x] Testar login no iPhone — FUNCIONANDO
 - [ ] Testar sidebar backdrop no iPhone real
 - [ ] Cadastro novo usuario: fluxo completo (cadastro → email confirmacao → login)
 - [ ] Remover debug code e test files apos confirmacao
