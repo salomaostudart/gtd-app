@@ -34,6 +34,11 @@
 - onAuthStateChange so trata mudancas futuras (login/logout/password_recovery)
 - SIGNED_OUT handler tem guard `if (!currentUser) return` para evitar falso logout na init
 
+## Variaveis Globais
+- SEMPRE usar `var` (nunca `let`) para variaveis no escopo global do script inline
+- Safari/WebKit tem bug TDZ: `let` global causa "Cannot access before initialization" dentro de functions
+- `let` pode ser usado normalmente DENTRO de funcoes (escopo local)
+
 ## Workflow do Claude Code
 - Anti-perda de contexto via docs/ (tarefas.md, decisoes.md, checkpoint.md)
 - MCP Chrome DevTools com --autoConnect (metodo oficial Chrome 144+, sem --remote-debugging-port)

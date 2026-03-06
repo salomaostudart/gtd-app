@@ -19,6 +19,11 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+<!-- No-cache for Safari -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
 <!-- Security -->
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="no-referrer">
@@ -1879,8 +1884,8 @@ const SUPABASE_ANON_KEY = 'SUPABASE_ANON_KEY_REDACTED';
 // ==========================================================================
 
 const SUPABASE_CONFIGURED = SUPABASE_URL && !SUPABASE_URL.includes('SEU-PROJETO');
-let supabaseClient = null;
-let currentUser = null;
+var supabaseClient = null;
+var currentUser = null;
 
 if (SUPABASE_CONFIGURED && window.supabase) {
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -1919,7 +1924,7 @@ function saveData() {
   scheduleCloudSync();
 }
 
-let data = loadData();
+var data = loadData();
 
 // Reset daily counter
 if (data.lastDate !== new Date().toDateString()) {
@@ -1930,8 +1935,8 @@ if (data.lastDate !== new Date().toDateString()) {
 
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
-let undoSnapshot = null;
-let undoPage = null;
+var undoSnapshot = null;
+var undoPage = null;
 
 function saveUndoSnapshot() {
   undoSnapshot = JSON.stringify(data);
@@ -2115,10 +2120,10 @@ function deleteInbox(id) {
 // PROCESS INBOX (GTD Workflow)
 // ==========================================================================
 
-let processStep = 'start';
-let processItem = null;
-let processActionText = '';
-let processProjectId = null;
+var processStep = 'start';
+var processItem = null;
+var processActionText = '';
+var processProjectId = null;
 
 function renderProcess() {
   const area = document.getElementById('process-area');
@@ -3213,7 +3218,7 @@ const reviewSteps = [
   ]}
 ];
 
-let reviewActive = false;
+var reviewActive = false;
 
 function renderReview() {
   const container = document.getElementById('review-list');
@@ -3551,7 +3556,7 @@ const tutorialSteps = [
   }
 ];
 
-let tutorialCurrentStep = 0;
+var tutorialCurrentStep = 0;
 
 function startTutorial() {
   tutorialCurrentStep = 0;
@@ -3759,8 +3764,8 @@ function performGlobalSearch() {
 // DRAG & DROP
 // ==========================================================================
 
-let draggedItemId = null;
-let draggedList = null;
+var draggedItemId = null;
+var draggedList = null;
 
 function initDragDrop(container, listName) {
   if (!container) return;
@@ -4031,8 +4036,8 @@ function initSwipeGestures(container, options) {
 // BROWSER NOTIFICATIONS
 // ==========================================================================
 
-let notificationPermission = Notification?.permission || 'default';
-let notificationInterval = null;
+var notificationPermission = Notification?.permission || 'default';
+var notificationInterval = null;
 
 function requestNotificationPermission() {
   if (!('Notification' in window)) return;
@@ -4139,7 +4144,7 @@ function dismissWelcome() {
 // IMPORT TASKS
 // ==========================================================================
 
-let importParsedData = null;
+var importParsedData = null;
 
 function openImportModal() {
   importParsedData = null;
@@ -4481,8 +4486,8 @@ function confirmImport() {
 // AUTH / LOGIN
 // ==========================================================================
 
-let pending2FAEmail = null;
-let loginInProgress = false;
+var pending2FAEmail = null;
+var loginInProgress = false;
 
 function togglePasswordVisibility(btn) {
   const input = btn.parentElement.querySelector('input');
@@ -4550,83 +4555,87 @@ function hideAuthMessage() {
   document.getElementById('auth-message').style.display = 'none';
 }
 
-async function handleLogin() {
-  if (!supabaseClient) return;
-  const email = document.getElementById('auth-email').value.trim();
-  const password = document.getElementById('auth-password').value;
+function handleLogin() {
+  if (!supabaseClient) {
+    showAuthMessage('Erro ao carregar. Recarregue a página.', 'error');
+    return;
+  }
+  var email = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value;
   if (!email || !password) { showAuthMessage('Preencha e-mail e senha.', 'error'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthMessage('Digite um e-mail válido.', 'error'); return; }
 
-  const btn = document.getElementById('auth-login-btn');
-  btn.textContent = 'Entrando...';
+  var btn = document.getElementById('auth-login-btn');
+  btn.textContent = 'Conectando...';
   btn.disabled = true;
   loginInProgress = true;
 
-  try {
-    // Use fetch directly to avoid Supabase SDK Web Lock deadlock on Safari iOS
-    const resp = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
-      body: JSON.stringify({ email, password })
-    });
-    const json = await resp.json();
-    if (!resp.ok) {
-      const error = { message: json.error_description || json.msg || json.error || 'Erro desconhecido' };
-      throw error;
-    }
-    // Set session in Supabase client
-    await supabaseClient.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token });
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    const authData = { user };
-    const error = null;
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', SUPABASE_URL + '/auth/v1/token?grant_type=password');
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+  xhr.timeout = 10000;
 
-    if (error) {
-      loginInProgress = false;
-      btn.textContent = 'Entrar';
-      btn.disabled = false;
-      const msgs = {
+  xhr.onload = function() {
+    var resp;
+    try { resp = JSON.parse(xhr.responseText); } catch(e) {
+      loginInProgress = false; btn.textContent = 'Entrar'; btn.disabled = false;
+      showAuthMessage('Resposta inválida do servidor.', 'error'); return;
+    }
+    if (xhr.status !== 200) {
+      loginInProgress = false; btn.textContent = 'Entrar'; btn.disabled = false;
+      var msg = resp.error_description || resp.msg || resp.error || 'Erro desconhecido';
+      var msgs = {
         'Invalid login credentials': 'Email ou senha incorretos.',
         'Email not confirmed': 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
         'email rate limit exceeded': 'Limite de e-mails atingido. Aguarde alguns minutos e tente novamente.'
       };
-      showAuthMessage(msgs[error.message] || error.message, 'error');
-      return;
+      showAuthMessage(msgs[msg] || msg, 'error'); return;
     }
+    btn.textContent = 'Autenticando...';
+    handleLoginSuccess(resp, email, btn);
+  };
+  xhr.onerror = function() {
+    loginInProgress = false; btn.textContent = 'Entrar'; btn.disabled = false;
+    showAuthMessage('Erro de conexão. Verifique sua internet.', 'error');
+  };
+  xhr.ontimeout = function() {
+    loginInProgress = false; btn.textContent = 'Entrar'; btn.disabled = false;
+    showAuthMessage('Conexão lenta. Tente novamente.', 'error');
+  };
+  xhr.send(JSON.stringify({ email: email, password: password }));
+}
 
-    currentUser = authData.user;
+async function handleLoginSuccess(resp, email, btn) {
+  try {
+    await Promise.race([
+      supabaseClient.auth.setSession({ access_token: resp.access_token, refresh_token: resp.refresh_token }),
+      new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 5000); })
+    ]);
+
+    currentUser = resp.user;
     await loadCloudData();
 
-    // Check if user has 2FA enabled
     if (data.twoFactorEnabled) {
-      const { error: otpError } = await supabaseClient.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: false }
-      });
-      if (otpError) {
-        btn.textContent = 'Entrar';
-        btn.disabled = false;
+      var result = await supabaseClient.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
+      if (result.error) {
+        btn.textContent = 'Entrar'; btn.disabled = false;
         showAuthMessage('Erro ao enviar código de verificação. Tente novamente.', 'error');
-        await supabaseClient.auth.signOut();
-        currentUser = null;
-        return;
+        await supabaseClient.auth.signOut(); currentUser = null; return;
       }
       pending2FAEmail = email;
-      btn.textContent = 'Entrar';
-      btn.disabled = false;
+      btn.textContent = 'Entrar'; btn.disabled = false;
       toggleAuthForm('2fa');
       showAuthMessage('Código de verificação enviado para ' + email, 'info');
       return;
     }
 
-    loginInProgress = false;
-    btn.textContent = 'Entrar';
-    btn.disabled = false;
+    loginInProgress = false; btn.textContent = 'Entrar'; btn.disabled = false;
     onAuthSuccess();
   } catch (e) {
     console.error('Login error:', e);
-    loginInProgress = false;
-    btn.textContent = 'Entrar';
-    btn.disabled = false;
-    showAuthMessage('Erro ao entrar. Verifique sua conexão e tente novamente.', 'error');
+    loginInProgress = false; btn.textContent = 'Entrar'; btn.disabled = false;
+    showAuthMessage(e.message === 'timeout' ? 'Conexão lenta. Tente novamente.' : 'Erro ao entrar. Tente novamente.', 'error');
   }
 }
 
@@ -4778,8 +4787,8 @@ function updateUserInfo() {
 // CLOUD SYNC (Supabase)
 // ==========================================================================
 
-let syncTimeout = null;
-let syncIndicatorTimeout = null;
+var syncTimeout = null;
+var syncIndicatorTimeout = null;
 
 function scheduleCloudSync() {
   if (!supabaseClient || !currentUser) return;
