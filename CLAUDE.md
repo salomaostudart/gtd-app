@@ -1,3 +1,5 @@
+> Complementa: Projetos/CLAUDE.md (regras globais sempre aplicaveis)
+
 # GTD App - Getting Things Done
 
 ## Sobre o Projeto
