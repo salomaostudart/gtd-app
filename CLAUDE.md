@@ -45,11 +45,8 @@ Ver `docs/tarefas.md` para status atualizado.
 ## Regras de Workflow
 - Ler CLAUDE.md e docs/ antes de qualquer tarefa
 - Nunca implementar sem aprovar plano para features novas
-- Tarefa ambigua → perguntar antes
 - Sem dependencias extras sem motivo
 - Sem refatoracao nao pedida
-- Falhou 2x → parar, repensar ou perguntar
-- Complexidade da resposta <= complexidade da tarefa
 - NUNCA apagar ou modificar codigo existente sem autorizacao
 
 ## Anti-perda de contexto
