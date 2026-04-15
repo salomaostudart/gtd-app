@@ -6,3 +6,7 @@ deploy/
 Thumbs.db
 .claude/
 .wrangler/
+
+# Manutencao deploy (gerado, nao versionado)
+maintenance-deploy/
+
