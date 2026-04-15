@@ -7,7 +7,7 @@
 
 <!-- Kill stale Service Workers + version-based cache bust -->
 <script>
-var APP_VERSION = '2026030601';
+const APP_VERSION = '2026030601';
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(regs) {
     regs.forEach(function(r) { r.unregister(); });
@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 // Force reload if cached version is outdated
 try {
-  var cachedVer = localStorage.getItem('gtd-app-version');
+  const cachedVer = localStorage.getItem('gtd-app-version');
   if (cachedVer && cachedVer !== APP_VERSION) {
     localStorage.setItem('gtd-app-version', APP_VERSION);
     location.reload(true);
@@ -1508,11 +1508,11 @@ select { cursor: pointer; }
 </style>
 <script>
 // If user has a saved session, hide auth and show app immediately to avoid flash
-var __hasSession = false;
+let __hasSession = false;
 try {
   __hasSession = !!localStorage.getItem('sb-cxnziboaviahmfcajqcz-auth-token');
   if (__hasSession) {
-    var s = document.createElement('style');
+    const s = document.createElement('style');
     s.id = 'session-preload';
     s.textContent = '#auth-overlay{display:none!important}#app-container{display:flex!important}';
     document.head.appendChild(s);
@@ -2031,8 +2031,8 @@ const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
 // ==========================================================================
 
 const SUPABASE_CONFIGURED = SUPABASE_URL && !SUPABASE_URL.includes('SEU-PROJETO');
-var supabaseClient = null;
-var currentUser = null;
+let supabaseClient = null;
+let currentUser = null;
 
 if (SUPABASE_CONFIGURED && window.supabase) {
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -2071,7 +2071,7 @@ function saveData() {
   scheduleCloudSync();
 }
 
-var data = loadData();
+let data = loadData();
 
 // Reset daily counter
 if (data.lastDate !== new Date().toDateString()) {
@@ -2082,8 +2082,8 @@ if (data.lastDate !== new Date().toDateString()) {
 
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
-var undoSnapshot = null;
-var undoPage = null;
+let undoSnapshot = null;
+let undoPage = null;
 
 function saveUndoSnapshot() {
   undoSnapshot = JSON.stringify(data);
@@ -2156,8 +2156,8 @@ function closeSidebar() {
 
 // FAB menu
 function toggleFabMenu() {
-  var c = document.getElementById('fab-container');
-  var b = document.getElementById('fab-backdrop');
+  const c = document.getElementById('fab-container');
+  const b = document.getElementById('fab-backdrop');
   c.classList.toggle('open');
   b.classList.toggle('open');
 }
@@ -2168,9 +2168,9 @@ function closeFabMenu() {
 
 // Sidebar collapsible groups
 function toggleSidebarGroup(el) {
-  var group = el.parentElement;
-  var items = group.querySelector('.sidebar-group-items');
-  var isOpen = group.classList.contains('open');
+  const group = el.parentElement;
+  const items = group.querySelector('.sidebar-group-items');
+  const isOpen = group.classList.contains('open');
   group.classList.toggle('open');
   items.style.display = isOpen ? 'none' : 'block';
 }
@@ -2288,10 +2288,10 @@ function deleteInbox(id) {
 // PROCESS INBOX (GTD Workflow)
 // ==========================================================================
 
-var processStep = 'start';
-var processItem = null;
-var processActionText = '';
-var processProjectId = null;
+let processStep = 'start';
+let processItem = null;
+let processActionText = '';
+let processProjectId = null;
 
 function renderProcess() {
   const area = document.getElementById('process-area');
@@ -3386,7 +3386,7 @@ const reviewSteps = [
   ]}
 ];
 
-var reviewActive = false;
+let reviewActive = false;
 
 function renderReview() {
   const container = document.getElementById('review-list');
@@ -3691,7 +3691,7 @@ function timeAgo(dateStr) {
 // INTERACTIVE TUTORIAL
 // ==========================================================================
 
-var isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
 const tutorialSteps = [
   {
     target: '.nav-item[data-page="inbox"]',
@@ -3727,7 +3727,7 @@ const tutorialSteps = [
   }
 ];
 
-var tutorialCurrentStep = 0;
+let tutorialCurrentStep = 0;
 
 function startTutorial() {
   tutorialCurrentStep = 0;
@@ -3753,10 +3753,10 @@ function showTutorialStep() {
     spotlight.style.height = (rect.height + pad * 2) + 'px';
 
     // Position tooltip — prefer below, but flip above if no room
-    var tooltipTop = rect.bottom + 12;
-    var tooltipLeft = Math.min(Math.max(rect.left, 10), window.innerWidth - 340);
+    let tooltipTop = rect.bottom + 12;
+    const tooltipLeft = Math.min(Math.max(rect.left, 10), window.innerWidth - 340);
     // Estimate tooltip height (~180px) and check if it fits
-    var estimatedHeight = 180;
+    const estimatedHeight = 180;
     if (tooltipTop + estimatedHeight > window.innerHeight - 10) {
       tooltipTop = Math.max(10, rect.top - estimatedHeight - 12);
     }
@@ -3940,8 +3940,8 @@ function performGlobalSearch() {
 // DRAG & DROP
 // ==========================================================================
 
-var draggedItemId = null;
-var draggedList = null;
+let draggedItemId = null;
+let draggedList = null;
 
 function initDragDrop(container, listName) {
   if (!container) return;
@@ -3997,20 +3997,17 @@ const modKeyProp = isMac ? 'metaKey' : 'ctrlKey';
 
 // Update shortcut hints in UI
 function updateShortcutHints() {
+  let el = document.getElementById('shortcut-hint-capture');
+  let badge = document.getElementById('shortcut-badge-capture');
+  let searchHint = document.getElementById('shortcut-hint-search');
   if (isMobileDevice) {
     // Hide keyboard shortcut hints on mobile
-    var el = document.getElementById('shortcut-hint-capture');
     if (el) el.style.display = 'none';
-    var badge = document.getElementById('shortcut-badge-capture');
     if (badge) badge.style.display = 'none';
-    var searchHint = document.getElementById('shortcut-hint-search');
     if (searchHint) searchHint.style.display = 'none';
   } else {
-    var el = document.getElementById('shortcut-hint-capture');
     if (el) el.textContent = `${modKey}+K para abrir / Esc para fechar`;
-    var badge = document.getElementById('shortcut-badge-capture');
     if (badge) badge.textContent = `${modKey}+K`;
-    var searchHint = document.getElementById('shortcut-hint-search');
     if (searchHint) searchHint.textContent = `${modKey}+F / Esc para fechar`;
   }
 }
@@ -4222,8 +4219,8 @@ function initSwipeGestures(container, options) {
 // BROWSER NOTIFICATIONS
 // ==========================================================================
 
-var notificationPermission = Notification?.permission || 'default';
-var notificationInterval = null;
+let notificationPermission = Notification?.permission || 'default';
+let notificationInterval = null;
 
 function requestNotificationPermission() {
   if (!('Notification' in window)) return;
@@ -4329,9 +4326,9 @@ function dismissWelcome() {
 
 function restartTutorial() {
   closeSidebar();
-  var key = currentUser ? 'gtd-welcomed-' + currentUser.id : 'gtd-welcomed';
+  const key = currentUser ? 'gtd-welcomed-' + currentUser.id : 'gtd-welcomed';
   localStorage.removeItem(key);
-  var overlay = document.getElementById('welcome-overlay');
+  const overlay = document.getElementById('welcome-overlay');
   overlay.classList.remove('hiding');
   overlay.style.display = 'flex';
   overlay.scrollTop = 0;
@@ -4341,7 +4338,7 @@ function restartTutorial() {
 // IMPORT TASKS
 // ==========================================================================
 
-var importParsedData = null;
+let importParsedData = null;
 
 function openImportModal() {
   importParsedData = null;
@@ -4683,8 +4680,8 @@ function confirmImport() {
 // AUTH / LOGIN
 // ==========================================================================
 
-var pending2FAEmail = null;
-var loginInProgress = false;
+let pending2FAEmail = null;
+let loginInProgress = false;
 
 function togglePasswordVisibility(btn) {
   const input = btn.parentElement.querySelector('input');
@@ -4757,32 +4754,32 @@ function handleLogin() {
     showAuthMessage('Erro ao carregar. Recarregue a página.', 'error');
     return;
   }
-  var email = document.getElementById('auth-email').value.trim();
-  var password = document.getElementById('auth-password').value;
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
   if (!email || !password) { showAuthMessage('Preencha e-mail e senha.', 'error'); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthMessage('Digite um e-mail válido.', 'error'); return; }
 
-  var btn = document.getElementById('auth-login-btn');
+  const btn = document.getElementById('auth-login-btn');
   btn.textContent = 'Conectando...';
   btn.disabled = true;
   loginInProgress = true;
 
-  var xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest();
   xhr.open('POST', SUPABASE_URL + '/auth/v1/token?grant_type=password');
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
   xhr.timeout = 10000;
 
   xhr.onload = function() {
-    var resp;
+    let resp;
     try { resp = JSON.parse(xhr.responseText); } catch(e) {
       loginInProgress = false; btn.textContent = 'Entrar'; btn.disabled = false;
       showAuthMessage('Resposta inválida do servidor.', 'error'); return;
     }
     if (xhr.status !== 200) {
       loginInProgress = false; btn.textContent = 'Entrar'; btn.disabled = false;
-      var msg = resp.error_description || resp.msg || resp.error || 'Erro desconhecido';
-      var msgs = {
+      const msg = resp.error_description || resp.msg || resp.error || 'Erro desconhecido';
+      const msgs = {
         'Invalid login credentials': 'Email ou senha incorretos.',
         'Email not confirmed': 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
         'email rate limit exceeded': 'Limite de e-mails atingido. Aguarde alguns minutos e tente novamente.'
@@ -4814,7 +4811,7 @@ async function handleLoginSuccess(resp, email, btn) {
     await loadCloudData();
 
     if (data.twoFactorEnabled) {
-      var result = await supabaseClient.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
+      const result = await supabaseClient.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
       if (result.error) {
         btn.textContent = 'Entrar'; btn.disabled = false;
         showAuthMessage('Erro ao enviar código de verificação. Tente novamente.', 'error');
@@ -4970,7 +4967,7 @@ async function handleLogout() {
 }
 
 function removeSessionPreload() {
-  var sp = document.getElementById('session-preload');
+  const sp = document.getElementById('session-preload');
   if (sp) sp.remove();
 }
 
@@ -4995,8 +4992,8 @@ function updateUserInfo() {
 // CLOUD SYNC (Supabase)
 // ==========================================================================
 
-var syncTimeout = null;
-var syncIndicatorTimeout = null;
+let syncTimeout = null;
+let syncIndicatorTimeout = null;
 
 function scheduleCloudSync() {
   if (!supabaseClient || !currentUser) return;
@@ -5134,7 +5131,7 @@ if (__hasSession) {
     console.error('getSession error:', e);
     // Fallback: try to parse session from localStorage if getSession timed out
     try {
-      var storedSession = JSON.parse(localStorage.getItem('sb-cxnziboaviahmfcajqcz-auth-token'));
+      const storedSession = JSON.parse(localStorage.getItem('sb-cxnziboaviahmfcajqcz-auth-token'));
       if (storedSession && storedSession.user) {
         session = storedSession;
         console.log('Using localStorage session fallback');
