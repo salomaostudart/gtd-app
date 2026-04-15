@@ -1,6 +1,10 @@
 > Complementa: Projetos/CLAUDE.md (regras globais sempre aplicaveis)
+> Referencia tecnica: hq/reference/boas-praticas.md
 
 # GTD App - Getting Things Done
+
+## Git / Commits
+Conventional Commits: `<tipo>(<escopo>): <descricao>`. Tipos: feat/fix/docs/chore/refactor/test. GitHub Flow (branch → PR → merge squash). Pre-commit hook bloqueia commit em main + gitleaks (instalado 15/04).
 
 ## Sobre o Projeto
 Aplicacao web GTD baseada no metodo de David Allen.
