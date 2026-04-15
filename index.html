@@ -2013,14 +2013,18 @@ try {
 <!-- Supabase Client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<!-- Credenciais locais (config.js, gitignored). Ver config.example.js para setup. -->
+<script src="config.js"></script>
+
 <script>
 // ==========================================================================
-// CONFIGURACAO SUPABASE — Substitua com as credenciais do seu projeto
+// CONFIGURACAO SUPABASE — Credenciais carregadas de config.js (gitignored).
+// Setup local: cp config.example.js config.js && editar com credenciais reais.
 // Instrucoes completas: veja DEPLOY.md
 // ==========================================================================
 
-const SUPABASE_URL = 'https://cxnziboaviahmfcajqcz.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4bnppYm9hdmlhaG1mY2FqcWN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNzc2NzgsImV4cCI6MjA4Nzk1MzY3OH0.UytY4RC9dpi7Ebko1H3BKx8aMAn7oXO1BhQrk6-PPIs';
+const SUPABASE_URL = window.SUPABASE_URL;
+const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
 
 // ==========================================================================
 // GTD APP - DATA LAYER
