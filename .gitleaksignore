@@ -1,0 +1,7 @@
+# Falsos positivos aceitos
+# Formato: <commit-sha>:<arquivo>:<rule-id>:<linha>
+
+# DEPLOY.md linha 89 em commits historicos — placeholder 'eyJhbGci...' usado
+# como exemplo em docs. Nao e secret real. Corrigido no HEAD para '<SUA_ANON_KEY_AQUI>'
+# mas o placeholder antigo permanece no historico pre-correcao.
+b34496c4bf42a5ea42cc683f25a2e5221b3ce560:DEPLOY.md:generic-api-key:89
