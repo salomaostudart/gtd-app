@@ -86,7 +86,7 @@ CREATE POLICY "Users manage own data"
 
 ```javascript
 const SUPABASE_URL = 'https://abc123.supabase.co';       // ← Cole sua URL aqui
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIs...';    // ← Cole sua chave aqui
+const SUPABASE_ANON_KEY = '<SUA_ANON_KEY_AQUI>';    // ← Cole sua chave aqui
 ```
 
 4. Salve o arquivo
