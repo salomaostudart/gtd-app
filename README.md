@@ -67,7 +67,19 @@ O app segue fielmente os 5 passos do metodo original:
 3. Para funcionar com sync/auth, configure um projeto no [Supabase](https://supabase.com/):
    - Crie a tabela `user_data` com colunas: `id`, `user_id`, `data` (JSONB), `updated_at`
    - Ative Row Level Security
-   - Atualize as credenciais no `index.html` (URL + anon key)
+
+## Setup local (credenciais)
+
+As credenciais Supabase ficam em `config.js` (gitignored, nao versionado):
+
+```bash
+cp config.example.js config.js
+# Editar config.js com sua SUPABASE_URL e SUPABASE_ANON_KEY reais
+```
+
+`config.example.js` serve como template versionado com valores placeholder.
+A anon key e publica por design do Supabase (protegida por RLS), mas o principio
+de separacao codigo/config exige nao versionar credenciais.
 
 ## Deploy
 
