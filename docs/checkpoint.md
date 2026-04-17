@@ -18,11 +18,6 @@ App GTD deployed em https://sal.dev.br (+ https://metodogtd.pages.dev). DNS prop
   - Change email: "Confirmar alteracao de e-mail - GTD App"
 - Teste 2FA: formulario de codigo aparece, email OTP enviado
 
-## Credenciais de teste
-- Email: salomaostudart@gmail.com
-- Senha: teste123
-- 2FA: ativado
-
 ## O que foi feito (sessao 05/03/2026 noite 3)
 - Commit + push GitHub (auth fixes + password toggle)
 - Teste 2FA completo: login → OTP enviado → codigo inserido → login OK
