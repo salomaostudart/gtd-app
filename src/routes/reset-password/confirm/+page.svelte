@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
 	import { getContext } from 'svelte';
 	import type { TypedSupabaseClient } from '$lib/supabase';
 	import type { ActionData, PageData } from './$types';
@@ -14,12 +13,18 @@
 	let exchangeError = $state('');
 	let exchangeDone = $state(false);
 
-	// O exchange DEVE ser feito client-side para usar o code_verifier
-	// armazenado no sessionStorage pelo supabase browser client.
-	// O server nao tem acesso ao code_verifier, causando otp_expired.
+	// O @supabase/ssr createBrowserClient ja tem detectSessionInUrl: true.
+	// Isso significa que ao carregar a pagina com ?code=..., o Supabase
+	// automaticamente chama exchangeCodeForSession internamente durante initialize().
+	// Nao devemos chamar manualmente — isso causaria dupla tentativa e falha no
+	// segundo chamado (code_verifier ja consumido pelo primeiro).
+	//
+	// Em vez disso, ouvimos o evento onAuthStateChange:
+	// - PASSWORD_RECOVERY: exchange ok, usuario autenticado — exibir form
+	// - SIGNED_OUT / erro de URL: mostrar mensagem de erro
 	onMount(async () => {
-		const code = new URLSearchParams(window.location.search).get('code');
 		const urlError = new URLSearchParams(window.location.search).get('error');
+		const code = new URLSearchParams(window.location.search).get('code');
 
 		if (urlError) {
 			exchangeError = 'Link de recuperacao invalido ou expirado. Solicite um novo.';
@@ -33,11 +38,44 @@
 			return;
 		}
 
-		const { error } = await supabase.auth.exchangeCodeForSession(code);
-		if (error) {
-			exchangeError = 'Link de recuperacao invalido ou expirado. Solicite um novo.';
-		}
-		exchangeDone = true;
+		// Ouvir evento PASSWORD_RECOVERY — disparado pelo detectSessionInUrl automatico
+		// Nota: onAuthStateChange dispara INITIAL_SESSION imediatamente com o estado atual.
+		// Se o detectSessionInUrl ja rodou (antes do onMount), a sessao ja esta estabelecida
+		// e INITIAL_SESSION chega com session valido. PASSWORD_RECOVERY nao sera re-disparado.
+		const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+			if (event === 'PASSWORD_RECOVERY') {
+				// Exchange bem-sucedido, sessao estabelecida pelo detectSessionInUrl
+				exchangeDone = true;
+			} else if (event === 'INITIAL_SESSION' && session) {
+				// detectSessionInUrl ja rodou antes do onMount — sessao valida disponivel
+				// Verificar se e uma sessao de recuperacao (user com recovery_sent_at recente)
+				exchangeDone = true;
+			} else if (event === 'INITIAL_SESSION' && !session) {
+				// Nenhuma sessao — exchange falhou ou link invalido
+				if (!exchangeDone) {
+					exchangeError = 'Link invalido ou expirado. Solicite um novo link de recuperacao.';
+					exchangeDone = true;
+				}
+			} else if (event === 'SIGNED_OUT') {
+				if (!exchangeDone) {
+					exchangeError = 'Link invalido ou expirado. Solicite um novo link de recuperacao.';
+					exchangeDone = true;
+				}
+			}
+		});
+
+		// Timeout de seguranca: se nenhum evento chegar em 5s, reportar erro
+		const timeout = setTimeout(() => {
+			if (!exchangeDone) {
+				exchangeError = 'Tempo esgotado ao verificar o link. Solicite um novo.';
+				exchangeDone = true;
+			}
+		}, 5000);
+
+		return () => {
+			subscription.unsubscribe();
+			clearTimeout(timeout);
+		};
 	});
 </script>
 
