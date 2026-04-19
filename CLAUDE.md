@@ -107,6 +107,17 @@ Secrets de producao: `wrangler secret put PUBLIC_SUPABASE_URL` e `wrangler secre
 - Incidente em producao: seguir `docs/security/09-incident-response.md`
 - Politica completa: `SECURITY.md` (raiz) + `docs/security/` (11 arquivos)
 
+## SEO (intencional restrito)
+
+Este e um app **privado/autenticado**. Nao deve ser indexado por mecanismos de busca.
+
+- `static/robots.txt`: `Disallow: /` (bloqueia crawlers — valido e explicito)
+- `src/app.html`: `<meta name="robots" content="noindex, nofollow">` (todas as paginas)
+- Pagina publica `/login`: meta description breve via `<svelte:head>`
+- Lighthouse SEO score ~45/100 e **esperado** (blocked indexing = comportamento correto)
+
+Nao "fix" SEO score — e feature, nao bug.
+
 ## Anti-perda de contexto
 - Decisao tomada -> registrar em `docs/decisoes.md` imediatamente
 - Ao atualizar qualquer doc -> atualizar `docs/checkpoint.md` junto
