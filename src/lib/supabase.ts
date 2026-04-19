@@ -1,0 +1,29 @@
+// lib/supabase.ts — Helpers para criar clientes Supabase
+// server: createServerClient (SSR, cookies, sem estado compartilhado)
+// browser: createBrowserClient (client-side, localStorage)
+
+import {
+  createBrowserClient,
+  createServerClient,
+  isBrowser,
+} from "@supabase/ssr";
+
+// Tipo exportado para uso em componentes que precisam tipar o cliente
+export type TypedSupabaseClient = ReturnType<typeof createBrowserClient>;
+
+const PUBLIC_SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL ?? "";
+const PUBLIC_SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
+
+export function createSupabaseServerClient(
+  cookies: Parameters<typeof createServerClient>[2]["cookies"],
+) {
+  return createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+    cookies,
+  });
+}
+
+export function createSupabaseBrowserClient() {
+  return createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+    isSingleton: isBrowser(),
+  });
+}
