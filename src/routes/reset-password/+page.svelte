@@ -1,10 +1,40 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import type { ActionData } from './$types';
+	import { getContext } from 'svelte';
+	import type { TypedSupabaseClient } from '$lib/supabase';
 
-	const { form }: { form: ActionData } = $props();
+	// Client-side: resetPasswordForEmail DEVE ser chamado pelo browser
+	// para que o code_verifier seja armazenado no sessionStorage do browser.
+	// Se chamado via server action, o code_verifier nao existe no browser
+	// e o exchange subsequente falha com otp_expired.
+	const { supabase } = getContext<{ supabase: TypedSupabaseClient }>('supabase');
 
+	let email = $state('');
 	let loading = $state(false);
+	let success = $state(false);
+	let error = $state('');
+
+	async function handleReset(e: Event) {
+		e.preventDefault();
+		if (!email) {
+			error = 'Informe seu email.';
+			return;
+		}
+
+		loading = true;
+		error = '';
+
+		const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+			redirectTo: `${window.location.origin}/reset-password/confirm`
+		});
+
+		loading = false;
+
+		if (resetError) {
+			error = 'Nao foi possivel enviar o email. Tente novamente.';
+		} else {
+			success = true;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -16,29 +46,19 @@
 		<div class="auth-logo">GTD</div>
 		<div class="auth-subtitle">Recuperar senha</div>
 
-		{#if form?.success}
+		{#if success}
 			<div class="auth-message auth-message-success" role="status">
 				Email enviado! Verifique sua caixa de entrada e clique no link para redefinir a senha.
 			</div>
 			<p class="auth-toggle"><a href="/login">Voltar ao login</a></p>
 		{:else}
-			{#if form?.error}
+			{#if error}
 				<div class="auth-message auth-message-error" role="alert" aria-live="polite">
-					{form.error}
+					{error}
 				</div>
 			{/if}
 
-			<form
-				method="POST"
-				action="?/reset"
-				use:enhance={() => {
-					loading = true;
-					return async ({ update }) => {
-						loading = false;
-						await update();
-					};
-				}}
-			>
+			<form onsubmit={handleReset}>
 				<div class="form-group">
 					<label for="email">Email</label>
 					<input
@@ -49,7 +69,7 @@
 						autocomplete="email"
 						required
 						disabled={loading}
-						value={form?.email ?? ''}
+						bind:value={email}
 					/>
 				</div>
 
