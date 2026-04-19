@@ -55,6 +55,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
   <meta name="theme-color" content="#6c8cff">
 
   <!-- Apple / Safari -->
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GTD">
@@ -456,7 +457,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
     <div class="welcome-tip">
       Dica: Use Ctrl+Space para captura rápida a qualquer momento.
     </div>
-    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:15px;font-weight:700" onclick="closeWelcome()">Começar!</button>
+    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:15px;font-weight:700" onclick="dismissWelcome()">Começar!</button>
   </div>
 </div>
 
