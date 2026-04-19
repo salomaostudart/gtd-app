@@ -1,0 +1,45 @@
+# Secrets e configs locais
+.env
+.env.*
+*.local
+
+# Dependencias
+node_modules/
+
+# Artefatos de build intermediarios (nao o output final)
+.svelte-kit/
+
+# Codigo-fonte (nao sao assets servidos — apenas .svelte-kit/output vai para o Worker)
+src/
+supabase/
+
+# Testes e ferramentas de qualidade
+tests/
+playwright-report/
+test-results/
+test-screenshots/
+coverage/
+
+# Documentacao de desenvolvimento
+docs/
+
+# Configs de ferramentas (nao sao assets servidos)
+biome.jsonc
+playwright.config.ts
+vite.config.ts
+svelte.config.js
+tsconfig.json
+wrangler.jsonc
+package.json
+package-lock.json
+renovate.json
+
+# Editores e IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

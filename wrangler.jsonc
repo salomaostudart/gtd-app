@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "gtd-app-worker",
+  "main": ".svelte-kit/cloudflare/_worker.js",
+  "assets": {
+    "directory": ".svelte-kit/cloudflare/"
+  },
+  "compatibility_date": "2026-04-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true }
+  // Variaveis de ambiente: definir via wrangler secret put
+  // PUBLIC_SUPABASE_URL — URL do projeto Supabase
+  // PUBLIC_SUPABASE_ANON_KEY — chave anonima publica do Supabase
+  //
+  // Para dev local: criar .env na raiz (gitignored):
+  //   PUBLIC_SUPABASE_URL=https://cxnziboaviahmfcajqcz.supabase.co
+  //   PUBLIC_SUPABASE_ANON_KEY=<sua-anon-key>
+}

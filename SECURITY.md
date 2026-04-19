@@ -1,0 +1,55 @@
+# Security Policy
+
+## Supported Versions
+
+| Version | Supported |
+|---------|-----------|
+| latest (main) | :white_check_mark: |
+| older releases | :x: |
+
+## Reporting a Vulnerability
+
+**Nunca** abra issue publica para reportar vulnerabilidade. Use um dos canais privados abaixo.
+
+### Canais
+
+1. **Email:** `salomaostudart+security@gmail.com`
+2. **GitHub Security Advisory:** https://github.com/salomaostudart/gtd-app/security/advisories/new
+
+### Resposta esperada
+
+| Severidade | Acknowledge | Fix target |
+|-----------|-------------|------------|
+| Critical (RCE, auth bypass, data leak) | 24h | 7 dias |
+| High (privilege escalation, XSS exploitable) | 72h | 30 dias |
+| Medium (DoS, info disclosure menor) | 1 semana | 90 dias |
+| Low (best-practice, cosmetic) | 2 semanas | proxima release |
+
+### Escopo
+
+**In-scope:** codigo do repo, dependencies, config producao (Cloudflare Workers deploys), secrets management, Supabase RLS.
+
+**Out-of-scope:** social engineering, DoS de infraestrutura sem vulnerabilidade real, spam, dominios nao associados ao projeto.
+
+### Coordinated Disclosure
+
+- Nao publicar detalhes ate fix deployado
+- Apos fix: CVE opcional (solicitar via GitHub advisory) + public disclosure com credito ao reporter (se aceitar)
+- Reporter recebe status updates periodicos durante triagem/fix
+
+## Security Best Practices
+
+Este projeto segue padroes 2026 documentados em [`docs/security/`](docs/security/):
+- [Secrets management](docs/security/01-secrets-management.md)
+- [Supply chain](docs/security/02-supply-chain.md)
+- [Pre-commit hooks](docs/security/03-pre-commit-hooks.md)
+- [Logging & observability](docs/security/05-logging-observability.md)
+- [Zero Trust principles](docs/security/06-zero-trust.md)
+- [IAM & auth](docs/security/07-iam-auth.md)
+- [Compliance LGPD](docs/security/08-compliance.md)
+- [Incident response](docs/security/09-incident-response.md)
+- [SBOM](docs/security/10-sbom.md)
+
+## Compliance
+
+- **LGPD (Brasil):** dados pessoais (email + tarefas GTD) armazenados no Supabase (infraestrutura AWS us-east-1). Base legal: consentimento (art. 7, I). Titular pode exportar via botao "Exportar Dados" e solicitar exclusao por email.

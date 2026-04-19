@@ -1,0 +1,72 @@
+// biome.jsonc — GTD App (SvelteKit + Svelte 5)
+// Standalone (nao extends bootstrap — repo independente)
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "files": {
+    "ignoreUnknown": true,
+    "ignore": [
+      "dist",
+      "build",
+      ".svelte-kit",
+      ".wrangler",
+      "node_modules",
+      "*.min.js",
+      "static/sw.js"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "tab",
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "warn",
+        "noConsole": "off"
+      },
+      "complexity": {
+        "noForEach": "warn"
+      },
+      "style": {
+        "noNonNullAssertion": "warn",
+        "useConst": "error",
+        "noDefaultExport": "off"
+      },
+      "a11y": {
+        "recommended": true
+      }
+    }
+  },
+  "overrides": [
+    {
+      // Svelte 5 runes ($state, $derived, $effect) sao compile-time — Biome nao conhece a sintaxe
+      "include": ["**/*.svelte"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    },
+    {
+      // Tests: mocks com `any` sao legitimos
+      "include": ["tests/**", "**/*.test.ts", "**/*.spec.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ]
+}
