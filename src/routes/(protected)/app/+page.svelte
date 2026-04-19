@@ -308,15 +308,6 @@
 		navigate('inbox');
 	}
 
-	// Logout
-	let loggingOut = $state(false);
-
-	async function handleLogout() {
-		loggingOut = true;
-		await supabase.auth.signOut();
-		window.location.href = '/login';
-	}
-
 	function toggleTheme() {
 		theme = theme === 'dark' ? 'light' : 'dark';
 		document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : '');
@@ -549,9 +540,9 @@
 		<div class="sidebar-footer">
 			<div class="user-info">
 				<span class="user-name">{data.user?.email}</span>
-				<button class="logout-btn" onclick={handleLogout} disabled={loggingOut}>
-					{loggingOut ? '...' : 'Sair'}
-				</button>
+				<form method="POST" action="?/logout" use:enhance>
+					<button type="submit" class="logout-btn">Sair</button>
+				</form>
 			</div>
 			<button class="nav-item" onclick={openQuickCapture} style="color:var(--accent)">
 				<span class="icon">&#9889;</span> Captura Rapida

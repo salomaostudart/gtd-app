@@ -1,4 +1,5 @@
 // app/+page.server.ts — Carrega dados GTD do Supabase (user_data JSONB com RLS)
+import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -18,40 +19,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-  // Salvar dados GTD no Supabase (upsert)
-  sync: async ({ request, locals }) => {
-    const { user } = await locals.safeGetSession();
-    if (!user) return { error: "Nao autenticado" };
-
-    const formData = await request.formData();
-    const raw = formData.get("data");
-    if (!raw) return { error: "Dados ausentes" };
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(String(raw));
-    } catch {
-      return { error: "JSON invalido" };
-    }
-
-    const { error } = await locals.supabase
-      .from("user_data")
-      .upsert(
-        {
-          user_id: user.id,
-          data: parsed,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" },
-      );
-
-    if (error) return { error: error.message };
-    return { success: true };
-  },
-
-  // Logout server-side
+  // Logout server-side (invalida cookie HttpOnly — mais seguro que client-side signOut)
   logout: async ({ locals }) => {
     await locals.supabase.auth.signOut();
-    return { success: true };
+    throw redirect(303, "/login");
   },
 };
