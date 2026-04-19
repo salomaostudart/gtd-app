@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import type { ActionData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
-	const { form }: { form: ActionData } = $props();
+	const { form, data }: { form: ActionData; data: PageData } = $props();
 
 	let loading = $state(false);
+
+	const code = data.code ?? '';
 </script>
 
 <svelte:head>
@@ -33,6 +35,7 @@
 				};
 			}}
 		>
+			<input type="hidden" name="code" value={code} />
 			<div class="form-group">
 				<label for="password">Nova senha</label>
 				<input
