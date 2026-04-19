@@ -1,0 +1,3 @@
+# GTD App — app privado/autenticado, nao indexar
+User-agent: *
+Disallow: /

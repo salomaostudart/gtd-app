@@ -10,6 +10,7 @@
 
 <svelte:head>
 	<title>Entrar — GTD</title>
+	<meta name="description" content="GTD App — Getting Things Done personal tracker. Acesso restrito." />
 </svelte:head>
 
 <div class="auth-overlay">
