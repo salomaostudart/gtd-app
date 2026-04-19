@@ -44,7 +44,7 @@ src/
     (protected)/        — grupo de rotas autenticadas
       +layout.server.ts — guard: redirect /login se nao autenticado
       app/
-        +page.server.ts — load cloudData + actions sync/logout
+        +page.server.ts — load cloudData + action logout (sync e client-side)
         +page.svelte    — GTD app completo (todas as views)
 ```
 
@@ -97,6 +97,15 @@ Secrets de producao: `wrangler secret put PUBLIC_SUPABASE_URL` e `wrangler secre
 - [ ] Validar PWA instalavel (manifest + sw.js)
 - [ ] Validar sync localStorage <-> Supabase
 - [ ] Avaliar DX SvelteKit vs Vanilla anterior
+
+## Security
+
+- Nunca logar dados do usuario (GTDData, email, userId) no console em producao
+- Nunca commitar `.env` ou secrets (gitleaks pre-commit ativo)
+- Antes de tocar em auth/RLS: ler `docs/security/07-iam-auth.md`
+- Antes de tocar em deps: ler `docs/security/02-supply-chain.md`
+- Incidente em producao: seguir `docs/security/09-incident-response.md`
+- Politica completa: `SECURITY.md` (raiz) + `docs/security/` (11 arquivos)
 
 ## Anti-perda de contexto
 - Decisao tomada -> registrar em `docs/decisoes.md` imediatamente
