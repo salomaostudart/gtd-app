@@ -13,3 +13,9 @@ dist/
 # Manutencao deploy (gerado, nao versionado)
 maintenance-deploy/
 
+# Heranca Vanilla JS — proteger contra recriacao acidental
+/index.html
+/sw.js
+/manifest.json
+/_headers
+
