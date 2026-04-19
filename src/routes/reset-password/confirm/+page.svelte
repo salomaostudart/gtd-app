@@ -1,12 +1,44 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { page } from '$app/stores';
+	import { getContext } from 'svelte';
+	import type { TypedSupabaseClient } from '$lib/supabase';
 	import type { ActionData, PageData } from './$types';
 
 	const { form, data }: { form: ActionData; data: PageData } = $props();
 
-	let loading = $state(false);
+	const { supabase } = getContext<{ supabase: TypedSupabaseClient }>('supabase');
 
-	const code = data.code ?? '';
+	let loading = $state(false);
+	let exchangeError = $state('');
+	let exchangeDone = $state(false);
+
+	// O exchange DEVE ser feito client-side para usar o code_verifier
+	// armazenado no sessionStorage pelo supabase browser client.
+	// O server nao tem acesso ao code_verifier, causando otp_expired.
+	onMount(async () => {
+		const code = new URLSearchParams(window.location.search).get('code');
+		const urlError = new URLSearchParams(window.location.search).get('error');
+
+		if (urlError) {
+			exchangeError = 'Link de recuperacao invalido ou expirado. Solicite um novo.';
+			exchangeDone = true;
+			return;
+		}
+
+		if (!code) {
+			exchangeError = 'Codigo de recuperacao nao encontrado. Solicite um novo link.';
+			exchangeDone = true;
+			return;
+		}
+
+		const { error } = await supabase.auth.exchangeCodeForSession(code);
+		if (error) {
+			exchangeError = 'Link de recuperacao invalido ou expirado. Solicite um novo.';
+		}
+		exchangeDone = true;
+	});
 </script>
 
 <svelte:head>
@@ -18,56 +50,66 @@
 		<div class="auth-logo">GTD</div>
 		<div class="auth-subtitle">Definir nova senha</div>
 
-		{#if form?.error}
+		{#if !exchangeDone}
+			<div class="auth-message auth-message-info" role="status">
+				Verificando link...
+			</div>
+		{:else if exchangeError}
 			<div class="auth-message auth-message-error" role="alert" aria-live="polite">
-				{form.error}
+				{exchangeError}
 			</div>
+			<p class="auth-toggle"><a href="/reset-password">Solicitar novo link</a></p>
+		{:else}
+			{#if form?.error}
+				<div class="auth-message auth-message-error" role="alert" aria-live="polite">
+					{form.error}
+				</div>
+			{/if}
+
+			<form
+				method="POST"
+				action="?/update"
+				use:enhance={() => {
+					loading = true;
+					return async ({ update }) => {
+						loading = false;
+						await update();
+					};
+				}}
+			>
+				<div class="form-group">
+					<label for="password">Nova senha</label>
+					<input
+						id="password"
+						name="password"
+						type="password"
+						placeholder="Minimo 8 caracteres"
+						autocomplete="new-password"
+						required
+						minlength={8}
+						disabled={loading}
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="confirm">Confirmar nova senha</label>
+					<input
+						id="confirm"
+						name="confirm"
+						type="password"
+						placeholder="Repita a senha"
+						autocomplete="new-password"
+						required
+						minlength={8}
+						disabled={loading}
+					/>
+				</div>
+
+				<button type="submit" class="btn btn-primary auth-submit" disabled={loading}>
+					{loading ? 'Salvando...' : 'Salvar nova senha'}
+				</button>
+			</form>
 		{/if}
-
-		<form
-			method="POST"
-			action="?/update"
-			use:enhance={() => {
-				loading = true;
-				return async ({ update }) => {
-					loading = false;
-					await update();
-				};
-			}}
-		>
-			<input type="hidden" name="code" value={code} />
-			<div class="form-group">
-				<label for="password">Nova senha</label>
-				<input
-					id="password"
-					name="password"
-					type="password"
-					placeholder="Minimo 8 caracteres"
-					autocomplete="new-password"
-					required
-					minlength={8}
-					disabled={loading}
-				/>
-			</div>
-
-			<div class="form-group">
-				<label for="confirm">Confirmar nova senha</label>
-				<input
-					id="confirm"
-					name="confirm"
-					type="password"
-					placeholder="Repita a senha"
-					autocomplete="new-password"
-					required
-					minlength={8}
-					disabled={loading}
-				/>
-			</div>
-
-			<button type="submit" class="btn btn-primary auth-submit" disabled={loading}>
-				{loading ? 'Salvando...' : 'Salvar nova senha'}
-			</button>
-		</form>
 
 		<p class="auth-toggle"><a href="/login">Voltar ao login</a></p>
 	</div>
@@ -142,10 +184,6 @@
 		text-decoration: none;
 	}
 
-	.auth-toggle a:hover {
-		text-decoration: underline;
-	}
-
 	.auth-message {
 		border-radius: var(--radius-sm);
 		padding: 10px 14px;
@@ -157,5 +195,11 @@
 		background: var(--red-bg);
 		border: 1px solid var(--red);
 		color: var(--red);
+	}
+
+	.auth-message-info {
+		background: var(--bg-tertiary, #2a2a2a);
+		border: 1px solid var(--border);
+		color: var(--text-secondary);
 	}
 </style>
