@@ -3,7 +3,11 @@ import { fail, redirect } from "@sveltejs/kit";
 import { z } from "zod";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ url, locals: { supabase } }) => {
+  const code = url.searchParams.get("code");
+  if (code) {
+    await supabase.auth.exchangeCodeForSession(code);
+  }
   return {};
 };
 
