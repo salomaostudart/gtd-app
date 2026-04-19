@@ -1,0 +1,77 @@
+name: Bug Report
+description: Reporte um comportamento inesperado ou erro
+title: "bug: "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar. Preencha todos os campos para agilizar a resolucao.
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      description: Sequencia exata de acoes para reproduzir o problema
+      placeholder: |
+        1. Acessar '...'
+        2. Clicar em '...'
+        3. Ver o erro
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento esperado
+      description: O que deveria acontecer?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Comportamento atual
+      description: O que esta acontecendo de fato? Incluir mensagens de erro, stack trace, screenshots se disponivel.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severidade
+      options:
+        - P0 — bloqueante (producao fora, perda de dados)
+        - P1 — alto (funcionalidade core quebrada, sem workaround)
+        - P2 — medio (funcionalidade degradada, workaround existe)
+        - P3 — baixo (cosmético, UX menor)
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Ambiente
+      description: "Ex: Node 22, Windows 11, Chrome 124, wrangler 3.x"
+      placeholder: "Node 22, Ubuntu 24.04, Chrome 124"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Versao do projeto
+      description: "Output de `git log --oneline -1` ou tag de release"
+      placeholder: "abc1234 ou v1.2.3"
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Logs, configs relevantes, tentativas de fix, links relacionados
+    validations:
+      required: false

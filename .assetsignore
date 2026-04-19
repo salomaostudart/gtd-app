@@ -1,0 +1,32 @@
+# Files to exclude from Cloudflare Workers Assets upload
+# Follows .gitignore syntax
+
+# Source files (not needed in production)
+src/
+tests/
+node_modules/
+.astro/
+
+# Config files
+astro.config.mjs
+tsconfig.json
+biome.jsonc
+vitest.config.ts
+playwright.config.ts
+renovate.json
+package.json
+package-lock.json
+wrangler.jsonc
+.editorconfig
+
+# Git
+.git/
+.gitignore
+.gitleaksignore
+
+# Docs
+docs/
+*.md
+
+# CI/CD
+.github/

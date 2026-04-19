@@ -5,3 +5,7 @@
 # como exemplo em docs. Nao e secret real. Corrigido no HEAD para '<SUA_ANON_KEY_AQUI>'
 # mas o placeholder antigo permanece no historico pre-correcao.
 b34496c4bf42a5ea42cc683f25a2e5221b3ce560:DEPLOY.md:generic-api-key:89
+
+# docs/security/01-secrets-management.md linha 164 — placeholder de anti-pattern em docs
+# "sk_live_abc123..." e exemplo explicito de secret hardcoded ERRADO. Nao e secret real.
+:docs/security/01-secrets-management.md:generic-api-key:164

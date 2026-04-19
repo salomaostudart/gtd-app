@@ -1,0 +1,112 @@
+# Security — OSV-Scanner, Gitleaks, SBOM (CycloneDX)
+#
+# ARQUIVO DESABILITADO: renomear para security.yml quando GitHub Actions estiver
+# disponivel na conta (issue #159).
+#
+# Stack 2026 (tudo open-source / free tier):
+#   - OSV-Scanner (Google) — vulnerabilidades em deps, substitui npm audit
+#   - Gitleaks — deteccao de secrets vazados no historico git
+#   - CycloneDX — geracao de SBOM (Software Bill of Materials)
+#   - SARIF upload — integra com GitHub Security tab (free em repos publicos)
+
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Roda toda segunda-feira as 08:00 UTC (05:00 BRT)
+    - cron: '0 8 * * 1'
+
+permissions:
+  contents: read
+  security-events: write  # necessario para upload SARIF
+
+jobs:
+  osv-scanner:
+    name: OSV-Scanner (vulnerabilidades)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # OSV-Scanner: https://google.github.io/osv-scanner/
+      # Verifica package-lock.json contra banco OSV (Go, JS, Python, Rust...)
+      - name: Run OSV-Scanner
+        uses: google/osv-scanner-action@v2
+        with:
+          scan-args: |-
+            --lockfile=package-lock.json
+            --format=sarif
+            --output=osv-results.sarif
+        continue-on-error: true
+
+      - name: Upload OSV SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: osv-results.sarif
+          category: osv-scanner
+
+  gitleaks:
+    name: Gitleaks (secrets)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # fetch-depth 0 para escanear historico completo
+          fetch-depth: 0
+
+      # Gitleaks: https://github.com/gitleaks/gitleaks
+      # Detecta API keys, tokens, senhas no codigo e historico git
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}  # necessario para repos privados
+        continue-on-error: true
+
+  sbom:
+    name: SBOM (CycloneDX)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # CycloneDX: formato SBOM padrao industria (OWASP)
+      # Alternativa: SPDX via: npx spdx-sbom-generator
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          npm install -g @cyclonedx/cyclonedx-npm
+          cyclonedx-npm --output-format json --output-file sbom.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom.json
+          retention-days: 90
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    # Roda apenas em PRs (compara base com head)
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      # GitHub nativo — identifica deps novas com vulnerabilidades conhecidas
+      # Free para repos publicos, requer Advanced Security em privados
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-2.0, GPL-3.0  # ajustar conforme licenca do projeto

@@ -1,0 +1,81 @@
+# A11y — Acessibilidade com Playwright + axe-core
+#
+# ARQUIVO DESABILITADO: renomear para a11y.yml quando GitHub Actions estiver
+# disponivel na conta (issue #159).
+#
+# Stack 2026:
+#   - Playwright (browser automation)
+#   - @axe-core/playwright (WCAG 2.1 AA por padrao)
+#   - HTML report gerado e publicado como artifact
+
+name: A11y
+
+on:
+  pull_request:
+    branches: [main]
+    # Roda so quando ha mudancas em arquivos de UI
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - '*.html'
+      - '*.astro'
+
+concurrency:
+  group: a11y-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  accessibility:
+    name: Acessibilidade (axe-core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Instala browsers Playwright (apenas chromium para CI — mais rapido)
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Build project
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      # Sobe servidor local para o Playwright testar
+      # Ajustar porta e comando conforme o variant (wrangler dev / astro preview / etc)
+      - name: Start preview server
+        run: |
+          npm run preview &
+          sleep 5  # aguarda servidor iniciar
+        env:
+          PORT: 4321
+
+      # axe-core via Playwright — verifica WCAG 2.1 AA
+      # Requer script em tests/a11y/ ou configuracao no playwright.config.ts
+      - name: Run accessibility tests
+        run: npx playwright test --project=chromium tests/a11y/
+        env:
+          BASE_URL: http://localhost:4321
+          CI: true
+
+      - name: Upload Playwright HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a11y-report-${{ github.sha }}
+          path: playwright-report/
+          retention-days: 14
+
+      # Se tiver Argos CI configurado (visual regression + a11y, free para OSS)
+      # https://argos-ci.com/
+      # - name: Upload screenshots to Argos
+      #   run: npx argos upload playwright-report/
+      #   env:
+      #     ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}

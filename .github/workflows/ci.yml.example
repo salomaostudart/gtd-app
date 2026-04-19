@@ -1,0 +1,113 @@
+# CI — lint, type-check, test, build
+#
+# ARQUIVO DESABILITADO: renomear para ci.yml quando GitHub Actions estiver
+# disponivel na conta (issue #159). Ate la, rodar manualmente via:
+#   npm run lint && npm run type-check && npm run test && npm run build
+#
+# Stack 2026:
+#   - Biome (lint + format) — substitui ESLint + Prettier
+#   - TypeScript (tsc --noEmit)
+#   - Vitest (unit + integration)
+#   - wrangler build (bundler CF Workers)
+
+name: CI
+
+on:
+  push:
+    branches: [main, 'feat/**', 'fix/**', 'refactor/**']
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (Biome)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Biome substitui ESLint + Prettier — mais rapido, zero config por padrao
+      # Doc: https://biomejs.dev/reference/cli/
+      - name: Run Biome (lint + format check)
+        run: npx biome ci --reporter=github
+
+  type-check:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+  test:
+    name: Tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npx vitest run --coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, type-check, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Check bundle size
+        run: |
+          if [ -f ".size-limit.json" ]; then
+            npx size-limit
+          else
+            echo "Sem .size-limit.json — skip size check"
+          fi

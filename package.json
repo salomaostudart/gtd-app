@@ -1,0 +1,32 @@
+{
+  "name": "gtd-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "wrangler dev",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "type-check": "astro check",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "ci": "npm run lint && npm run type-check && npm run test && npm run build",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "astro": "^5.7.10"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@axe-core/playwright": "^4.10.1",
+    "@biomejs/biome": "^1.9.4",
+    "@cloudflare/workers-types": "^4.20250410.0",
+    "@playwright/test": "^1.52.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2",
+    "wrangler": "^4.12.0"
+  }
+}

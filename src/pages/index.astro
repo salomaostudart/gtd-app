@@ -1,0 +1,542 @@
+---
+// GTD App — Astro static page
+// All app logic runs client-side (is:inline scripts) — same behavior as original index.html
+// Supabase credentials come from PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY env vars
+// For local dev: create .env with these vars (gitignored)
+import '../styles/gtd.css';
+
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL ?? '';
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
+---
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <title>GTD - Getting Things Done</title>
+
+  <!-- Kill stale Service Workers + version-based cache bust -->
+  <script is:inline>
+  const APP_VERSION = '2026030601';
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      regs.forEach(function(r) { r.unregister(); });
+    });
+    if (window.caches) {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(k) { caches.delete(k); });
+      });
+    }
+  }
+  try {
+    const cachedVer = localStorage.getItem('gtd-app-version');
+    if (cachedVer && cachedVer !== APP_VERSION) {
+      localStorage.setItem('gtd-app-version', APP_VERSION);
+      location.reload(true);
+    } else {
+      localStorage.setItem('gtd-app-version', APP_VERSION);
+    }
+  } catch(e) {}
+  </script>
+
+  <!-- No-cache for Safari -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- Security -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#6c8cff">
+
+  <!-- Apple / Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GTD">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236c8cff'/><text x='50' y='68' font-size='48' font-weight='bold' text-anchor='middle' fill='white' font-family='sans-serif'>GTD</text></svg>">
+
+  <!-- Favicon SVG -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236c8cff'/><text x='50' y='68' font-size='48' font-weight='bold' text-anchor='middle' fill='white' font-family='sans-serif'>GTD</text></svg>">
+
+  <!-- Session preload: hide auth overlay if session exists (avoids flash) -->
+  <script is:inline>
+  let __hasSession = false;
+  try {
+    __hasSession = !!localStorage.getItem('sb-cxnziboaviahmfcajqcz-auth-token');
+    if (__hasSession) {
+      const s = document.createElement('style');
+      s.id = 'session-preload';
+      s.textContent = '#auth-overlay{display:none!important}#app-container{display:flex!important}';
+      document.head.appendChild(s);
+    }
+  } catch(e) {}
+  </script>
+</head>
+<body>
+
+<!-- Auth / Login screen -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-logo">GTD</div>
+    <div class="auth-subtitle">Getting Things Done</div>
+
+    <div id="auth-form-login">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="auth-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')handleLogin()">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <div class="password-wrapper">
+          <input type="password" id="auth-password" placeholder="Sua senha" onkeydown="if(event.key==='Enter')handleLogin()">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility(this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:10px;font-size:14px" onclick="handleLogin()" id="auth-login-btn">Entrar</button>
+      <p class="auth-toggle">Não tem conta? <a href="#" onclick="toggleAuthForm('register');return false" tabindex="0">Criar conta</a></p>
+      <p class="auth-toggle"><a href="#" onclick="handleResetPassword();return false" tabindex="0">Esqueci minha senha</a></p>
+    </div>
+
+    <div id="auth-form-newpassword" style="display:none">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+        Digite sua nova senha abaixo.
+      </p>
+      <div class="form-group">
+        <label>Nova Senha</label>
+        <div class="password-wrapper">
+          <input type="password" id="auth-new-password" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter')handleSetNewPassword()">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility(this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Confirmar Nova Senha</label>
+        <div class="password-wrapper">
+          <input type="password" id="auth-new-password-confirm" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')handleSetNewPassword()">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility(this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:10px;font-size:14px" onclick="handleSetNewPassword()" id="auth-newpassword-btn">Salvar Nova Senha</button>
+    </div>
+
+    <div id="auth-form-register" style="display:none">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="auth-register-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')handleRegister()">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <div class="password-wrapper">
+          <input type="password" id="auth-register-password" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter')handleRegister()">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility(this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:10px;font-size:14px" onclick="handleRegister()" id="auth-register-btn">Criar Conta</button>
+      <p class="auth-toggle">Já tem conta? <a href="#" onclick="toggleAuthForm('login');return false" tabindex="0">Entrar</a></p>
+    </div>
+
+    <div id="auth-message" style="display:none;margin-top:12px;padding:10px 12px;border-radius:6px;font-size:13px;text-align:center"></div>
+  </div>
+</div>
+
+<!-- App Container -->
+<div class="app" id="app-container" style="display:none">
+
+  <!-- Sidebar -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1>GTD</h1>
+      <p>Getting Things Done</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Captura</div>
+        <div class="nav-item active" data-page="dashboard">
+          <span class="icon">&#9673;</span> Dashboard
+        </div>
+        <div class="nav-item" data-page="inbox">
+          <span class="icon">&#9993;</span> Caixa de Entrada
+          <span class="badge" id="badge-inbox">0</span>
+        </div>
+        <div class="nav-item" data-page="process">
+          <span class="icon">&#9881;</span> Processar
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Organizar</div>
+        <div class="nav-item" data-page="actions">
+          <span class="icon">&#9654;</span> Próximas Ações
+          <span class="badge" id="badge-actions">0</span>
+        </div>
+        <div class="nav-item" data-page="projects">
+          <span class="icon">&#9632;</span> Projetos
+          <span class="badge" id="badge-projects">0</span>
+        </div>
+        <div class="nav-item" data-page="calendar">
+          <span class="icon">&#128197;</span> Calendário
+        </div>
+        <div class="nav-item" data-page="waiting">
+          <span class="icon">&#8987;</span> Aguardando
+          <span class="badge" id="badge-waiting">0</span>
+        </div>
+        <div class="nav-item" data-page="someday">
+          <span class="icon">&#9734;</span> Algum Dia / Talvez
+          <span class="badge" id="badge-someday">0</span>
+        </div>
+        <div class="nav-item" data-page="reference">
+          <span class="icon">&#128194;</span> Referência
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Refletir</div>
+        <div class="nav-item" data-page="review">
+          <span class="icon">&#128270;</span> Revisão Semanal
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" id="user-info" style="display:none">
+        <span class="user-name" id="user-display-name"></span>
+        <button class="logout-btn" onclick="handleLogout()">Sair</button>
+      </div>
+      <div class="nav-item" onclick="openQuickCapture()" style="color:var(--accent)">
+        <span class="icon">&#9889;</span> Captura Rápida
+        <span class="badge" id="shortcut-badge-capture" style="background:var(--accent-bg);color:var(--accent);font-size:10px"></span>
+      </div>
+      <div class="nav-item" onclick="restartTutorial()">
+        <span class="icon">&#127891;</span> Rever Tutorial
+      </div>
+      <div class="sidebar-group">
+        <div class="nav-item sidebar-group-toggle" onclick="toggleSidebarGroup(this)">
+          <span class="icon">&#9881;</span> Configurações <span class="sidebar-group-arrow">&#9656;</span>
+        </div>
+        <div class="sidebar-group-items" style="display:none">
+          <div class="nav-item" onclick="toggleTheme()">
+            <span class="icon" id="theme-icon">&#9788;</span> <span id="theme-label">Tema Claro</span>
+          </div>
+          <div class="nav-item" onclick="showSecuritySettings()">
+            <span class="icon">&#128274;</span> Segurança
+          </div>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="nav-item sidebar-group-toggle" onclick="toggleSidebarGroup(this)">
+          <span class="icon">&#128196;</span> Importar / Exportar <span class="sidebar-group-arrow">&#9656;</span>
+        </div>
+        <div class="sidebar-group-items" style="display:none">
+          <div class="nav-item" onclick="exportData()">
+            <span class="icon">&#128190;</span> Exportar Dados
+          </div>
+          <div class="nav-item" onclick="document.getElementById('import-file').click()">
+            <span class="icon">&#128194;</span> Restaurar Backup (JSON)
+          </div>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+          <div class="nav-item" onclick="openImportModal()">
+            <span class="icon">&#128229;</span> Importar Tarefas
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="main-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="mobile-toggle" onclick="toggleSidebar()">&#9776;</button>
+        <h2><span class="header-icon" id="page-icon">&#9673;</span> <span id="page-title">Dashboard</span></h2>
+      </div>
+      <div id="header-actions"></div>
+    </div>
+    <div class="main-content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="dashboard-grid" id="dashboard-stats"></div>
+        <div class="section-title">Alertas</div>
+        <div id="dashboard-recent"></div>
+        <div class="mt-12">
+          <div class="section-title">Feitas nos Últimos 7 Dias</div>
+          <div id="dashboard-weekly-chart"></div>
+        </div>
+        <div class="mt-12">
+          <div class="section-title">Projetos Ativos</div>
+          <div id="dashboard-projects"></div>
+        </div>
+      </div>
+
+      <!-- INBOX -->
+      <div class="page" id="page-inbox">
+        <div class="add-bar">
+          <input type="text" id="inbox-input" placeholder="Capturar... o que está na sua mente?" onkeydown="if(event.key==='Enter')addInboxItem()">
+          <button class="btn btn-primary" onclick="addInboxItem()">+ Capturar</button>
+        </div>
+        <div id="inbox-list"></div>
+      </div>
+
+      <!-- PROCESS -->
+      <div class="page" id="page-process">
+        <div id="process-area"></div>
+      </div>
+
+      <!-- NEXT ACTIONS -->
+      <div class="page" id="page-actions">
+        <div class="add-bar">
+          <input type="text" id="action-input" placeholder="Nova próxima ação..." onkeydown="if(event.key==='Enter')showAddActionModal()">
+          <button class="btn btn-primary" onclick="showAddActionModal()">+ Ação</button>
+        </div>
+        <div class="filter-bar">
+          <label>Contexto:</label>
+          <select id="filter-context" onchange="renderActions()">
+            <option value="">Todos</option>
+          </select>
+          <label>Energia:</label>
+          <select id="filter-energy" onchange="renderActions()">
+            <option value="">Todas</option>
+            <option value="baixa">Baixa</option>
+            <option value="media">Média</option>
+            <option value="alta">Alta</option>
+          </select>
+          <label>Tempo:</label>
+          <select id="filter-time" onchange="renderActions()">
+            <option value="">Qualquer</option>
+            <option value="5">5 min</option>
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+            <option value="60">1h+</option>
+          </select>
+        </div>
+        <div id="actions-list"></div>
+      </div>
+
+      <!-- PROJECTS -->
+      <div class="page" id="page-projects">
+        <div class="add-bar">
+          <input type="text" id="project-input" placeholder="Novo projeto (resultado desejado)..." onkeydown="if(event.key==='Enter')addProject()">
+          <button class="btn btn-primary" onclick="addProject()">+ Projeto</button>
+        </div>
+        <div id="projects-list"></div>
+      </div>
+
+      <!-- CALENDAR -->
+      <div class="page" id="page-calendar">
+        <div class="add-bar">
+          <input type="text" id="cal-input" placeholder="Novo item com data..." style="flex:2">
+          <input type="date" id="cal-date" style="flex:1">
+          <input type="time" id="cal-time" style="flex:1" placeholder="Hora (opc.)">
+          <button class="btn btn-primary" onclick="addCalendarItem()">+ Adicionar</button>
+        </div>
+        <div id="calendar-list"></div>
+      </div>
+
+      <!-- WAITING FOR -->
+      <div class="page" id="page-waiting">
+        <button class="btn btn-primary mb-16" onclick="showAddWaitingModal()">+ Aguardando</button>
+        <div id="waiting-list"></div>
+      </div>
+
+      <!-- SOMEDAY MAYBE -->
+      <div class="page" id="page-someday">
+        <div class="add-bar">
+          <input type="text" id="someday-input" placeholder="Algum dia eu quero..." onkeydown="if(event.key==='Enter')addSomedayItem()">
+          <button class="btn btn-primary" onclick="addSomedayItem()">+ Adicionar</button>
+        </div>
+        <div id="someday-list"></div>
+      </div>
+
+      <!-- REFERENCE -->
+      <div class="page" id="page-reference">
+        <button class="btn btn-primary mb-16" onclick="showAddReferenceModal()">+ Referência</button>
+        <div class="filter-bar">
+          <label>Buscar:</label>
+          <input type="text" id="ref-search" placeholder="Filtrar..." style="width:260px" oninput="renderReference()">
+        </div>
+        <div id="reference-list"></div>
+      </div>
+
+      <!-- WEEKLY REVIEW -->
+      <div class="page" id="page-review">
+        <div style="max-width:600px">
+          <p class="text-muted text-sm mb-16">
+            O hábito mais crítico do GTD. Reserve 1-2 horas semanais (recomendado: sexta-feira).
+          </p>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px">
+            <button class="btn btn-sm" onclick="navigateTo('inbox')">&#9993; Inbox</button>
+            <button class="btn btn-sm" onclick="navigateTo('actions')">&#9654; Ações</button>
+            <button class="btn btn-sm" onclick="navigateTo('projects')">&#9632; Projetos</button>
+            <button class="btn btn-sm" onclick="navigateTo('calendar')">&#128197; Calendário</button>
+            <button class="btn btn-sm" onclick="navigateTo('waiting')">&#8987; Aguardando</button>
+            <button class="btn btn-sm" onclick="navigateTo('someday')">&#9734; Algum Dia</button>
+          </div>
+          <div class="add-bar" style="margin-bottom:20px">
+            <input type="text" id="review-capture-input" placeholder="Captura rápida durante revisão..." onkeydown="if(event.key==='Enter')reviewCapture()">
+            <button class="btn btn-primary btn-sm" onclick="reviewCapture()">+ Capturar</button>
+          </div>
+          <div id="review-progress" style="margin-bottom:20px"></div>
+          <div id="review-list"></div>
+          <div style="margin-top:20px;display:flex;gap:8px">
+            <button class="btn btn-green" onclick="resetReview()">Reiniciar Revisão</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Quick Capture (global) -->
+<div class="quick-capture-overlay" id="quick-capture" onclick="if(event.target===this)closeQuickCapture()">
+  <div class="quick-capture-box">
+    <h3>
+      Captura Rápida
+      <span class="shortcut-hint" id="shortcut-hint-capture"></span>
+    </h3>
+    <input type="text" id="quick-capture-input" placeholder="O que está na sua mente? Capture aqui..." onkeydown="handleQuickCaptureKey(event)">
+  </div>
+</div>
+
+<!-- Global Search -->
+<div class="search-overlay" id="global-search" onclick="if(event.target===this)closeGlobalSearch()">
+  <div class="search-box">
+    <h3>
+      Busca Global
+      <span class="shortcut-hint" id="shortcut-hint-search">Ctrl+F / Esc para fechar</span>
+    </h3>
+    <input type="text" id="global-search-input" placeholder="Buscar em tudo..." oninput="performSearch(this.value)" onkeydown="if(event.key==='Escape')closeGlobalSearch()">
+    <div class="search-results" id="search-results"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Welcome / Onboarding Overlay -->
+<div class="welcome-overlay" id="welcome-overlay" style="display:none">
+  <div class="welcome-box">
+    <div class="welcome-logo">GTD</div>
+    <div class="welcome-subtitle">Getting Things Done — Sistema de Produtividade</div>
+    <p class="welcome-desc">
+      Bem-vindo! Este sistema implementa o método GTD de David Allen: capture tudo,
+      processe cada item, organize por contexto e ação, e faça revisões semanais.
+      <br><br>
+      Seus dados ficam salvos no seu navegador (localStorage) e sincronizados na nuvem quando você está logado.
+    </p>
+    <div class="welcome-steps">
+      <div class="welcome-step">
+        <span class="step-icon">&#9993;</span>
+        <div class="step-text"><strong>1. Capturar</strong> — Jogue tudo na Caixa de Entrada. Não filtre agora.</div>
+      </div>
+      <div class="welcome-step">
+        <span class="step-icon">&#9881;</span>
+        <div class="step-text"><strong>2. Processar</strong> — Decida o que é cada item. Requer ação? Qual?</div>
+      </div>
+      <div class="welcome-step">
+        <span class="step-icon">&#9632;</span>
+        <div class="step-text"><strong>3. Organizar</strong> — Coloque em listas: Ações, Projetos, Calendário...</div>
+      </div>
+      <div class="welcome-step">
+        <span class="step-icon">&#128270;</span>
+        <div class="step-text"><strong>4. Revisar</strong> — Semanalmente, revise todas as listas.</div>
+      </div>
+      <div class="welcome-step">
+        <span class="step-icon">&#9654;</span>
+        <div class="step-text"><strong>5. Engajar</strong> — Faça o trabalho com foco e confiança.</div>
+      </div>
+    </div>
+    <div class="welcome-tip">
+      Dica: Use Ctrl+Space para captura rápida a qualquer momento.
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:15px;font-weight:700" onclick="closeWelcome()">Começar!</button>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="import-overlay" id="import-overlay" onclick="if(event.target===this)closeImportModal()">
+  <div class="import-modal">
+    <div class="import-header">
+      <h3>Importar Tarefas</h3>
+      <button class="import-close-btn" onclick="closeImportModal()">&times;</button>
+    </div>
+    <div class="import-tabs">
+      <button class="import-tab active" data-import-tab="todoist" onclick="switchImportTab('todoist')">CSV</button>
+      <button class="import-tab" data-import-tab="texto" onclick="switchImportTab('texto')">Texto Livre</button>
+      <button class="import-tab" data-import-tab="estruturado" onclick="switchImportTab('estruturado')">Texto Estruturado</button>
+    </div>
+    <div class="import-tab-content active" id="import-tab-todoist">
+      <label class="import-file-label" for="import-csv-file">
+        Clique para selecionar arquivo CSV (Todoist, Any.do, etc.)
+        <span class="import-file-name" id="import-csv-name">Nenhum arquivo selecionado</span>
+      </label>
+      <input type="file" id="import-csv-file" accept=".csv" style="display:none" onchange="handleCsvFileSelect(event)">
+    </div>
+    <div class="import-tab-content" id="import-tab-texto">
+      <textarea id="import-texto-input" class="import-textarea" rows="10" placeholder="Comprar leite&#10;Ligar para o dentista&#10;Revisar relatório&#10;..."></textarea>
+    </div>
+    <div class="import-tab-content" id="import-tab-estruturado">
+      <div class="import-help">
+        Use <code># Projeto</code> para criar projeto, <code>- Ação @contexto</code> para ações,
+        <code>[data]</code> para data, <code>>> Pessoa</code> para aguardando, <code>~item</code> para algum dia.
+      </div>
+      <textarea id="import-estruturado-input" class="import-textarea" rows="10" placeholder="# Reforma da cozinha&#10;- Pedir orçamento @telefone&#10;- Comprar tinta [2026-03-15]&#10;- Agendar pedreiro >> João&#10;&#10;~Aprender violão&#10;- Enviar relatório [2026-03-10 14:00]"></textarea>
+    </div>
+    <div class="import-preview" id="import-preview" style="display:none">
+      <h4>Preview da importação</h4>
+      <div id="import-preview-content"></div>
+    </div>
+    <div class="import-actions">
+      <button class="btn" onclick="closeImportModal()">Cancelar</button>
+      <button class="btn btn-green" id="import-parse-btn" onclick="parseImport()">Analisar</button>
+      <button class="btn btn-accent" id="import-confirm-btn" onclick="confirmImport()" style="display:none">Confirmar Importação</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAB (Floating Action Button) — mobile only -->
+<div class="fab-container" id="fab-container">
+  <div class="fab-backdrop" id="fab-backdrop" onclick="closeFabMenu()"></div>
+  <div class="fab-menu">
+    <div class="fab-menu-item" onclick="closeFabMenu();openQuickCapture()">
+      <span class="fab-label">Captura Rápida</span>
+      <button>&#9889;</button>
+    </div>
+    <div class="fab-menu-item" onclick="closeFabMenu();navigateTo('inbox')">
+      <span class="fab-label">Inbox</span>
+      <button>&#9993;</button>
+    </div>
+    <div class="fab-menu-item" onclick="closeFabMenu();navigateTo('actions')">
+      <span class="fab-label">Próximas Ações</span>
+      <button>&#9654;</button>
+    </div>
+  </div>
+  <button class="fab" onclick="toggleFabMenu()">+</button>
+</div>
+
+<!-- Review floating back button -->
+<button class="review-back-btn" id="review-back-btn" onclick="navigateTo('review')">
+  Voltar à Revisão
+</button>
+
+<!-- Supabase Client via CDN -->
+<script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Inject Supabase credentials from Astro env vars (build-time) -->
+<script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
+  window.SUPABASE_URL = supabaseUrl || '';
+  window.SUPABASE_ANON_KEY = supabaseAnonKey || '';
+</script>
+
+<!-- GTD App Logic (full client-side app) -->
+<script is:inline src="/gtd-app.js"></script>
+
+</body>
+</html>

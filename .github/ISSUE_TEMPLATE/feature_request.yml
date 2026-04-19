@@ -1,0 +1,79 @@
+name: Feature Request
+description: Proponha uma nova funcionalidade ou melhoria
+title: "feat: "
+labels: ["enhancement", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Descreva a feature com clareza suficiente para ser implementada sem reuniao adicional.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema ou necessidade
+      description: Qual situacao essa feature resolve? Qual dor, fricao ou oportunidade existe hoje?
+      placeholder: "Quando tento fazer X, preciso Y manualmente porque Z nao existe..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solucao proposta
+      description: Como voce imagina que deveria funcionar? Quanto mais concreto, melhor.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Outras abordagens que voce pensou e por que nao resolvem
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridade percebida
+      options:
+        - Alta — bloqueia uso ou diferencial competitivo claro
+        - Media — melhoria significativa de UX/DX
+        - Baixa — nice-to-have, qualidade de vida
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Escopo estimado
+      options:
+        - Pequeno — mudanca localizada, < 1 dia
+        - Medio — envolve 2-3 areas, 1-3 dias
+        - Grande — mudanca arquitetural ou cross-cutting, > 3 dias
+        - Nao sei estimar
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criterio de aceite
+      description: Como saberemos que a feature esta pronta? O que precisa ser verdade?
+      placeholder: |
+        - [ ] Usuario consegue X sem Y manual
+        - [ ] Funciona em todos os browsers suportados
+        - [ ] Sem regressao em Z
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Links, mockups, referencias de outros produtos, discussoes relacionadas
+    validations:
+      required: false

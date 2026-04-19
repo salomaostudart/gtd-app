@@ -11,3 +11,16 @@ Thumbs.db
 # Manutencao deploy (gerado, nao versionado)
 maintenance-deploy/
 
+# Astro
+dist/
+.astro/
+
+# Test output
+playwright-report/
+test-results/
+coverage/
+
+# Editor
+.vscode/
+.idea/
+
