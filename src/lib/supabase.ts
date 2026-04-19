@@ -7,12 +7,13 @@ import {
   createServerClient,
   isBrowser,
 } from "@supabase/ssr";
+import {
+  PUBLIC_SUPABASE_URL,
+  PUBLIC_SUPABASE_ANON_KEY,
+} from "$env/static/public";
 
 // Tipo exportado para uso em componentes que precisam tipar o cliente
 export type TypedSupabaseClient = ReturnType<typeof createBrowserClient>;
-
-const PUBLIC_SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL ?? "";
-const PUBLIC_SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 export function createSupabaseServerClient(
   cookies: Parameters<typeof createServerClient>[2]["cookies"],

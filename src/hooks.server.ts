@@ -1,10 +1,17 @@
 // hooks.server.ts — Middleware auth Supabase server-side
 // Roda em TODA request antes de load functions e actions
+import {
+  PUBLIC_SUPABASE_ANON_KEY,
+  PUBLIC_SUPABASE_URL,
+} from "$env/static/public";
 import { createServerClient } from "@supabase/ssr";
 import type { Handle } from "@sveltejs/kit";
 
-const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL ?? "";
-const SUPABASE_ANON_KEY = process.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
+// $env/static/public: SvelteKit nativo, build-time, funciona em Workers runtime.
+// NAO usar process.env (Workers nao tem Node) nem import.meta.env (sem envPrefix).
+// Ver cloudflare-bootstrap docs/quirks-log.md Quirk SvelteKit 3.
+const SUPABASE_URL = PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = PUBLIC_SUPABASE_ANON_KEY;
 
 export const handle: Handle = async ({ event, resolve }) => {
   event.locals.supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
